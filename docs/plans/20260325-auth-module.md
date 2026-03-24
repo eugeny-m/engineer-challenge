@@ -98,14 +98,14 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
 - Create: `auth_service/domain/exceptions.py`
 - Create: `tests/unit/domain/test_value_objects.py`
 
-- [ ] implement `Email` value object — validates format, normalized to lowercase, immutable dataclass
-- [ ] implement `PlainPassword` value object — enforces length/complexity invariants (min 8 chars, at least one digit)
-- [ ] implement `HashedPassword` value object — wraps bcrypt hash string, no validation logic (just a typed wrapper)
-- [ ] implement `ResetToken` value object — wraps a URL-safe random token string
-- [ ] define domain exceptions: `InvalidEmailError`, `WeakPasswordError`, `UserAlreadyExistsError`, `UserNotFoundError`, `InvalidCredentialsError`, `TokenExpiredError`, `TokenAlreadyUsedError`, `TokenNotFoundError`, `InvalidTokenError`
-- [ ] write unit tests for `Email` (valid, invalid format, normalization)
-- [ ] write unit tests for `PlainPassword` (too short, missing digit, valid)
-- [ ] run tests — must pass before task 3
+- [x] implement `Email` value object — validates format, normalized to lowercase, immutable dataclass
+- [x] implement `PlainPassword` value object — enforces length/complexity invariants (min 8 chars, at least one digit)
+- [x] implement `HashedPassword` value object — wraps bcrypt hash string, no validation logic (just a typed wrapper)
+- [x] implement `ResetToken` value object — wraps a URL-safe random token string
+- [x] define domain exceptions: `InvalidEmailError`, `WeakPasswordError`, `UserAlreadyExistsError`, `UserNotFoundError`, `InvalidCredentialsError`, `TokenExpiredError`, `TokenAlreadyUsedError`, `TokenNotFoundError`, `InvalidTokenError`
+- [x] write unit tests for `Email` (valid, invalid format, normalization)
+- [x] write unit tests for `PlainPassword` (too short, missing digit, valid)
+- [x] run tests — must pass before task 3
 
 ### Task 3: Domain layer — entities and aggregate
 
