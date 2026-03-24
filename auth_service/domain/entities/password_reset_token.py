@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from auth_service.domain.exceptions import TokenAlreadyUsedError, TokenExpiredError
@@ -15,7 +15,8 @@ class PasswordResetToken:
     used: bool
 
     def consume(self) -> "PasswordResetToken":
-        if datetime.utcnow() >= self.expires_at:
+        now = datetime.now(timezone.utc) if self.expires_at.tzinfo is not None else datetime.utcnow()
+        if now >= self.expires_at:
             raise TokenExpiredError("Reset token has expired")
         if self.used:
             raise TokenAlreadyUsedError("Reset token has already been used")

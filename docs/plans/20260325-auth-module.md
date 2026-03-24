@@ -160,7 +160,7 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
 - Create: `tests/unit/application/test_token_lifecycle.py`
 - Create: `tests/unit/application/test_password_reset.py`
 
-- [ ] define application port interfaces:
+- [x] define application port interfaces:
   - `PasswordHasher` (hash/verify)
   - `TokenService` (generate_access_token(user_id, session_id) → JWT with sub/jti/sid claims; generate_refresh_token() → opaque string; decode_access_token(token) → claims dict)
   - `TokenStore`:
@@ -171,23 +171,23 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
     - `revoke_session(session_id)` → DEL access jti, refresh token, session hash, SREM from user set
     - `revoke_all_user_sessions(user_id)` → SMEMBERS sessions:{user_id} → revoke each session
   - `EmailService` (send_reset_email)
-- [ ] define DTOs: `RegisterUserCommand`, `AuthenticateUserCommand(email, password, device_info=None)`, `RefreshTokenCommand(refresh_token)`, `RevokeSessionCommand(session_id)`, `RequestPasswordResetCommand`, `ResetPasswordCommand`, `TokenPairDTO(access_token, refresh_token, session_id, token_type)`
-- [ ] implement `RegisterUserHandler`: validate email/password → check duplicate → hash password → save user → return void
-- [ ] implement `AuthenticateUserHandler`: find user → verify password hash → create session_id → generate access JWT (jti, sid=session_id) + refresh token → `TokenStore.create_session(...)` → return `TokenPairDTO`
-- [ ] implement `RefreshTokenHandler`: GET refresh:{token} → session_id + user_id → generate new access JWT + new refresh token → `TokenStore.rotate_session(...)` → return `TokenPairDTO`
-- [ ] implement `RevokeSessionHandler`: `TokenStore.revoke_session(session_id)` → immediate invalidation
-- [ ] implement `RequestPasswordResetHandler`: find user → **raise `UserNotFoundError` if not found** (product decision: show explicit "no such email" error to UX; see trade-off note below) → `repo.delete_all_by_user_id(user_id)` → create new `PasswordResetToken` (expires in N min) → save → send email → return void
-- [ ] implement `ResetPasswordHandler`: find token → consume token → find user → hash new password → change password → save → `TokenStore.revoke_all_user_sessions(user_id)` (forced re-login after password change)
-- [ ] write unit tests for `RegisterUserHandler` (success, duplicate email, weak password) with in-memory fake repos/stores
-- [ ] write unit tests for `AuthenticateUserHandler` (success, wrong password, user not found — verify session_id in response)
-- [ ] write unit tests for `RefreshTokenHandler` (success, invalid refresh token, rotation — old token rejected after use)
-- [ ] write unit tests for `RevokeSessionHandler` (success, already revoked)
-- [ ] write unit tests for `RequestPasswordResetHandler`:
+- [x] define DTOs: `RegisterUserCommand`, `AuthenticateUserCommand(email, password, device_info=None)`, `RefreshTokenCommand(refresh_token)`, `RevokeSessionCommand(session_id)`, `RequestPasswordResetCommand`, `ResetPasswordCommand`, `TokenPairDTO(access_token, refresh_token, session_id, token_type)`
+- [x] implement `RegisterUserHandler`: validate email/password → check duplicate → hash password → save user → return void
+- [x] implement `AuthenticateUserHandler`: find user → verify password hash → create session_id → generate access JWT (jti, sid=session_id) + refresh token → `TokenStore.create_session(...)` → return `TokenPairDTO`
+- [x] implement `RefreshTokenHandler`: GET refresh:{token} → session_id + user_id → generate new access JWT + new refresh token → `TokenStore.rotate_session(...)` → return `TokenPairDTO`
+- [x] implement `RevokeSessionHandler`: `TokenStore.revoke_session(session_id)` → immediate invalidation
+- [x] implement `RequestPasswordResetHandler`: find user → **raise `UserNotFoundError` if not found** (product decision: show explicit "no such email" error to UX; see trade-off note below) → `repo.delete_all_by_user_id(user_id)` → create new `PasswordResetToken` (expires in N min) → save → send email → return void
+- [x] implement `ResetPasswordHandler`: find token → consume token → find user → hash new password → change password → save → `TokenStore.revoke_all_user_sessions(user_id)` (forced re-login after password change)
+- [x] write unit tests for `RegisterUserHandler` (success, duplicate email, weak password) with in-memory fake repos/stores
+- [x] write unit tests for `AuthenticateUserHandler` (success, wrong password, user not found — verify session_id in response)
+- [x] write unit tests for `RefreshTokenHandler` (success, invalid refresh token, rotation — old token rejected after use)
+- [x] write unit tests for `RevokeSessionHandler` (success, already revoked)
+- [x] write unit tests for `RequestPasswordResetHandler`:
   - success: token created, email sent
   - unknown email: raises `UserNotFoundError` (product decision — UX shows "no such email")
   - second request: previous token deleted (even if not expired), new token created — only one token exists after
-- [ ] write unit tests for `ResetPasswordHandler` (success, expired token, all sessions revoked after password change)
-- [ ] run tests — must pass before task 6
+- [x] write unit tests for `ResetPasswordHandler` (success, expired token, all sessions revoked after password change)
+- [x] run tests — must pass before task 6
 
 ### Task 6: Infrastructure — database models and migrations
 
