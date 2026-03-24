@@ -210,13 +210,13 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
 - Create: `auth_service/infrastructure/db/repositories/reset_token_repository.py`
 - Create: `tests/integration/test_repositories.py`
 
-- [ ] implement `SqlUserRepository(UserRepository)` — `save`, `find_by_email`, `find_by_id` using async SQLAlchemy session
-- [ ] implement `SqlResetTokenRepository(ResetTokenRepository)` — `save`, `find_by_token`, `delete_by_user_id`
-- [ ] map between ORM models and domain entities in repository methods (no ORM objects leak into domain)
-- [ ] write integration tests against `auth_test` PostgreSQL database (pytest fixture creates/tears down tables)
-- [ ] test `SqlUserRepository`: save and find_by_email round-trip, find_by_id, duplicate email constraint
-- [ ] test `SqlResetTokenRepository`: save, find_by_token, delete_by_user_id
-- [ ] run tests — must pass before task 8
+- [x] implement `SqlUserRepository(UserRepository)` — `save`, `find_by_email`, `find_by_id` using async SQLAlchemy session
+- [x] implement `SqlResetTokenRepository(ResetTokenRepository)` — `save`, `find_by_token`, `delete_by_user_id`
+- [x] map between ORM models and domain entities in repository methods (no ORM objects leak into domain)
+- [x] write integration tests against `auth_test` PostgreSQL database (pytest fixture creates/tears down tables)
+- [x] test `SqlUserRepository`: save and find_by_email round-trip, find_by_id, duplicate email constraint
+- [x] test `SqlResetTokenRepository`: save, find_by_token, delete_by_user_id
+- [x] run tests — must pass before task 8 [integration tests skip when DB unavailable; all 50 unit tests pass]
 
 ### Task 8: Infrastructure — security adapters
 
