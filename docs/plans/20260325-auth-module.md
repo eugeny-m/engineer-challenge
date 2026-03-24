@@ -306,18 +306,18 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
 Rate limiting uses SlowAPI (FastAPI-native) with Redis backend — reuses existing Redis connection.
 Two-dimensional limits (per IP + per email/key) catch both volumetric and targeted attacks.
 
-- [ ] add SlowAPI middleware to FastAPI app with Redis as backend store
-- [ ] apply rate limits per operation:
+- [x] add SlowAPI middleware to FastAPI app with Redis as backend store
+- [x] apply rate limits per operation:
   - `login` mutation: **5/IP/minute** + **10/email/15min** (credential stuffing + brute force)
   - `register` mutation: **5/IP/hour** (spam account creation)
   - `requestPasswordReset` mutation: **3/email/hour** + **10/IP/hour** (email bombing + enumeration)
   - `resetPassword` mutation: **10/IP/hour** (defense in depth; token is 256-bit random)
   - `refreshToken` mutation: **60/IP/hour** (mild abuse prevention; rotation handles replay)
-- [ ] all rate limit violations return HTTP 429 with `Retry-After` header
-- [ ] email-keyed limits extracted from GraphQL input variables (not just IP)
-- [ ] document in comments: account lockout deliberately NOT implemented (hard lockout enables DoS — attacker can lock out legitimate users; exponential backoff via rate limits is safer)
-- [ ] write unit tests for rate limiter: under limit passes, at limit passes, over limit raises 429 with Retry-After
-- [ ] run tests — must pass before task 12
+- [x] all rate limit violations return HTTP 429 with `Retry-After` header
+- [x] email-keyed limits extracted from GraphQL input variables (not just IP)
+- [x] document in comments: account lockout deliberately NOT implemented (hard lockout enables DoS — attacker can lock out legitimate users; exponential backoff via rate limits is safer)
+- [x] write unit tests for rate limiter: under limit passes, at limit passes, over limit raises 429 with Retry-After
+- [x] run tests — 80 unit tests pass (14 new rate limiter tests)
 
 ### Task 12: Verify acceptance criteria
 

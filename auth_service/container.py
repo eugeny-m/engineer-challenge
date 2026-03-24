@@ -34,6 +34,7 @@ from auth_service.infrastructure.email.mock_email_service import MockEmailServic
 from auth_service.infrastructure.redis.redis_token_store import RedisTokenStore
 from auth_service.infrastructure.security.bcrypt_hasher import BcryptHasher
 from auth_service.infrastructure.security.jwt_token_service import JwtTokenService
+from auth_service.infrastructure.security.rate_limiter import RateLimiter
 
 
 class RequestScope:
@@ -103,6 +104,7 @@ class GlobalContainer:
         )
         self.token_store: TokenStore = RedisTokenStore(redis_client)
         self.email_service = MockEmailService()
+        self.rate_limiter = RateLimiter(redis_client)
 
     @asynccontextmanager
     async def request_scope(self) -> AsyncGenerator[RequestScope, None]:
