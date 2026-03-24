@@ -136,10 +136,10 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
 - Create: `auth_service/domain/repositories/user_repository.py`
 - Create: `auth_service/domain/repositories/reset_token_repository.py`
 
-- [ ] define abstract `UserRepository` with methods: `save(user)`, `find_by_email(email) -> User | None`, `find_by_id(user_id) -> User | None`
-- [ ] define abstract `ResetTokenRepository` with methods: `save(token)`, `find_by_token(token_str) -> PasswordResetToken | None`, `delete_all_by_user_id(user_id)` — **deletes ALL tokens for the user regardless of expiry or used status** (invariant: only one pending reset token per user at any time; issuing a new one unconditionally invalidates all previous ones)
-- [ ] no tests needed (pure interfaces) — but run existing tests to verify no regressions
-- [ ] run tests — must pass before task 5
+- [x] define abstract `UserRepository` with methods: `save(user)`, `find_by_email(email) -> User | None`, `find_by_id(user_id) -> User | None`
+- [x] define abstract `ResetTokenRepository` with methods: `save(token)`, `find_by_token(token_str) -> PasswordResetToken | None`, `delete_all_by_user_id(user_id)` — **deletes ALL tokens for the user regardless of expiry or used status** (invariant: only one pending reset token per user at any time; issuing a new one unconditionally invalidates all previous ones)
+- [x] no tests needed (pure interfaces) — but run existing tests to verify no regressions
+- [x] run tests — must pass before task 5
 
 ### Task 5: Application layer — command handlers
 
