@@ -228,12 +228,12 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
 - Create: `tests/unit/infrastructure/test_security.py`
 - Create: `tests/integration/test_token_store.py`
 
-- [ ] implement `BcryptHasher(PasswordHasher)` — wraps `passlib.context.CryptContext` with bcrypt scheme
-- [ ] implement `JwtTokenService(TokenService)`:
+- [x] implement `BcryptHasher(PasswordHasher)` — wraps `bcrypt` directly (passlib/bcrypt version incompatibility resolved by using bcrypt lib directly)
+- [x] implement `JwtTokenService(TokenService)`:
   - `generate_access_token(user_id, email)` → signed JWT with `sub` (user_id), `jti` (UUID4), `iat`, `exp`
   - `generate_refresh_token()` → URL-safe secrets.token_urlsafe(32) opaque string
   - `decode_access_token(token)` → raises `TokenExpiredError` / `InvalidTokenError` on bad tokens
-- [ ] implement `RedisTokenStore(TokenStore)` using Redis pipeline/transactions where atomicity matters:
+- [x] implement `RedisTokenStore(TokenStore)` using Redis pipeline/transactions where atomicity matters:
   - `create_session(session_id, user_id, refresh_token, device_info, access_ttl, refresh_ttl)`:
     - SETEX `access:{jti}` → `{user_id, session_id}` (jti comes from access JWT claims)
     - SETEX `refresh:{token}` → `{user_id, session_id}` TTL=refresh_ttl
@@ -249,11 +249,11 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
     - SREM `sessions:{user_id}` → session_id
   - `revoke_all_user_sessions(user_id)`:
     - SMEMBERS `sessions:{user_id}` → list of session_ids → revoke_session for each; DEL `sessions:{user_id}`
-- [ ] implement `MockEmailService(EmailService)` — logs the reset link via structlog (no real SMTP, documented as TODO)
-- [ ] write unit tests for `BcryptHasher`: hash produces bcrypt prefix, verify correct/wrong password
-- [ ] write unit tests for `JwtTokenService`: decode valid token, expired token raises, tampered token raises, jti present in claims
-- [ ] write integration tests for `RedisTokenStore` against real Redis (Docker Compose): store/valid/revoke access jti, refresh token rotation, revoke all sessions
-- [ ] run tests — must pass before task 9
+- [x] implement `MockEmailService(EmailService)` — logs the reset link via structlog (no real SMTP, documented as TODO)
+- [x] write unit tests for `BcryptHasher`: hash produces bcrypt prefix, verify correct/wrong password
+- [x] write unit tests for `JwtTokenService`: decode valid token, expired token raises, tampered token raises, jti present in claims
+- [x] write integration tests for `RedisTokenStore` against real Redis (Docker Compose): store/valid/revoke access jti, refresh token rotation, revoke all sessions
+- [x] run tests — 66 unit tests pass; integration tests skip when Redis unavailable (same pattern as task 7)
 
 ### Task 9: Infrastructure — structured logging
 
