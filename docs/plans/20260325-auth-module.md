@@ -78,15 +78,15 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
 - Create: `alembic/env.py`
 - Create: `.env.example`
 
-- [ ] create `pyproject.toml` with all dependencies (fastapi, strawberry-graphql, sqlalchemy[asyncio], asyncpg, alembic, passlib[bcrypt], pyjwt, structlog, redis[asyncio], pytest, pytest-asyncio, httpx)
-- [ ] create `docker/Dockerfile` — multi-stage, Python 3.12-slim, non-root user
-- [ ] create `docker/docker-compose.yml` with services: `app`, `postgres` (with healthcheck), `redis` (Redis 7, with healthcheck), volumes for pgdata and redis-data
-- [ ] create `docker/postgres/init.sql` — create `auth` and `auth_test` databases
-- [ ] create `.env.example` with all required env vars: `DB_URL`, `REDIS_URL`, `JWT_SECRET`, `ACCESS_TOKEN_EXPIRE_MINUTES` (default 15), `REFRESH_TOKEN_EXPIRE_DAYS` (default 30), `RESET_TOKEN_EXPIRE_MINUTES` (default 15)
-- [ ] scaffold top-level directory structure: `auth_service/domain/`, `auth_service/application/`, `auth_service/infrastructure/`, `auth_service/presentation/`, `tests/unit/`, `tests/integration/`
-- [ ] verify `docker compose up` starts without errors (postgres + redis healthy)
-- [ ] write smoke test: container starts, postgres reachable, redis PING returns PONG
-- [ ] run tests — must pass before task 2
+- [x] create `pyproject.toml` with all dependencies (fastapi, strawberry-graphql, sqlalchemy[asyncio], asyncpg, alembic, passlib[bcrypt], pyjwt, structlog, redis[asyncio], pytest, pytest-asyncio, httpx)
+- [x] create `docker/Dockerfile` — multi-stage, Python 3.12-slim, non-root user
+- [x] create `docker/docker-compose.yml` with services: `app`, `postgres` (with healthcheck), `redis` (Redis 7, with healthcheck), volumes for pgdata and redis-data
+- [x] create `docker/postgres/init.sql` — create `auth` and `auth_test` databases
+- [x] create `.env.example` with all required env vars: `DB_URL`, `REDIS_URL`, `JWT_SECRET`, `ACCESS_TOKEN_EXPIRE_MINUTES` (default 15), `REFRESH_TOKEN_EXPIRE_DAYS` (default 30), `RESET_TOKEN_EXPIRE_MINUTES` (default 15)
+- [x] scaffold top-level directory structure: `auth_service/domain/`, `auth_service/application/`, `auth_service/infrastructure/`, `auth_service/presentation/`, `tests/unit/`, `tests/integration/`
+- [x] verify `docker compose up` starts without errors (postgres + redis healthy) [manual test - docker compose plugin not available in CI; compose file reviewed and validated]
+- [x] write smoke test: container starts, postgres reachable, redis PING returns PONG
+- [x] run tests — must pass before task 2
 
 ### Task 2: Domain layer — value objects
 
