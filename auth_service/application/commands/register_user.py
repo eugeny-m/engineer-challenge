@@ -1,3 +1,4 @@
+import time
 import uuid
 from datetime import datetime, timezone
 
@@ -9,6 +10,9 @@ from auth_service.domain.repositories.user_repository import UserRepository
 from auth_service.domain.value_objects.email import Email
 from auth_service.domain.value_objects.hashed_password import HashedPassword
 from auth_service.domain.value_objects.plain_password import PlainPassword
+from auth_service.infrastructure.logging import get_logger
+
+_log = get_logger(__name__)
 
 
 class RegisterUserHandler:
@@ -17,19 +21,30 @@ class RegisterUserHandler:
         self._hasher = hasher
 
     async def handle(self, command: RegisterUserCommand) -> None:
-        email = Email(command.email)
-        PlainPassword(command.password)  # validates invariants; raises WeakPasswordError if invalid
+        start = time.monotonic()
+        log = _log.bind(operation="register_user", email=command.email)
+        log.info("register_user.start")
 
-        existing = await self._user_repo.find_by_email(email)
-        if existing is not None:
-            raise UserAlreadyExistsError(f"User with email {email.value} already exists")
+        try:
+            email = Email(command.email)
+            PlainPassword(command.password)  # validates invariants; raises WeakPasswordError if invalid
 
-        hashed = HashedPassword(self._hasher.hash(command.password))
-        user = User(
-            id=uuid.uuid4(),
-            email=email,
-            hashed_password=hashed,
-            is_active=True,
-            created_at=datetime.now(timezone.utc),
-        )
-        await self._user_repo.save(user)
+            existing = await self._user_repo.find_by_email(email)
+            if existing is not None:
+                raise UserAlreadyExistsError(f"User with email {email.value} already exists")
+
+            hashed = HashedPassword(self._hasher.hash(command.password))
+            user = User(
+                id=uuid.uuid4(),
+                email=email,
+                hashed_password=hashed,
+                is_active=True,
+                created_at=datetime.now(timezone.utc),
+            )
+            await self._user_repo.save(user)
+            duration_ms = round((time.monotonic() - start) * 1000, 2)
+            log.info("register_user.success", user_id=str(user.id), duration_ms=duration_ms)
+        except Exception as exc:
+            duration_ms = round((time.monotonic() - start) * 1000, 2)
+            log.warning("register_user.failure", error=str(exc), duration_ms=duration_ms)
+            raise

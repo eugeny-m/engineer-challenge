@@ -261,12 +261,12 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
 - Create: `auth_service/infrastructure/logging.py`
 - Modify: `auth_service/main.py` (will be created in task 10 — defer integration)
 
-- [ ] configure structlog with JSON renderer (for production) and console renderer (for dev, based on env)
-- [ ] define log context keys: `user_id`, `email`, `operation`, `duration_ms`
-- [ ] integrate structlog into all command handlers (log operation start/success/failure)
-- [ ] integrate structlog into JWT service (log token generation, decode errors)
-- [ ] no new tests (logging is a side effect) — run existing tests
-- [ ] run tests — must pass before task 10
+- [x] configure structlog with JSON renderer (for production) and console renderer (for dev, based on env)
+- [x] define log context keys: `user_id`, `email`, `operation`, `duration_ms`
+- [x] integrate structlog into all command handlers (log operation start/success/failure)
+- [x] integrate structlog into JWT service (log token generation, decode errors)
+- [x] no new tests (logging is a side effect) — run existing tests
+- [x] run tests — must pass before task 10
 
 ### Task 10: Presentation layer — GraphQL schema and resolvers
 

@@ -1,3 +1,4 @@
+import time
 import uuid
 
 from auth_service.application.dto import AuthenticateUserCommand, TokenPairDTO
@@ -7,6 +8,9 @@ from auth_service.application.ports.token_store import TokenStore
 from auth_service.domain.exceptions import InvalidCredentialsError, UserNotFoundError
 from auth_service.domain.repositories.user_repository import UserRepository
 from auth_service.domain.value_objects.email import Email
+from auth_service.infrastructure.logging import get_logger
+
+_log = get_logger(__name__)
 
 # TTL constants (seconds)
 ACCESS_TOKEN_TTL = 15 * 60       # 15 minutes
@@ -27,34 +31,50 @@ class AuthenticateUserHandler:
         self._token_store = token_store
 
     async def handle(self, command: AuthenticateUserCommand) -> TokenPairDTO:
-        email = Email(command.email)
-        user = await self._user_repo.find_by_email(email)
-        if user is None:
-            raise InvalidCredentialsError("Invalid email or password")
+        start = time.monotonic()
+        log = _log.bind(operation="authenticate_user", email=command.email)
+        log.info("authenticate_user.start")
 
-        if not self._hasher.verify(command.password, user.hashed_password.value):
-            raise InvalidCredentialsError("Invalid email or password")
+        try:
+            email = Email(command.email)
+            user = await self._user_repo.find_by_email(email)
+            if user is None:
+                raise InvalidCredentialsError("Invalid email or password")
 
-        session_id = uuid.uuid4()
-        access_token = self._token_service.generate_access_token(user.id, session_id)
-        refresh_token = self._token_service.generate_refresh_token()
+            if not self._hasher.verify(command.password, user.hashed_password.value):
+                raise InvalidCredentialsError("Invalid email or password")
 
-        # Extract jti from access token claims
-        claims = self._token_service.decode_access_token(access_token)
-        jti = claims["jti"]
+            session_id = uuid.uuid4()
+            access_token = self._token_service.generate_access_token(user.id, session_id)
+            refresh_token = self._token_service.generate_refresh_token()
 
-        await self._token_store.create_session(
-            session_id=session_id,
-            user_id=user.id,
-            access_jti=jti,
-            refresh_token=refresh_token,
-            device_info=command.device_info,
-            access_ttl=ACCESS_TOKEN_TTL,
-            refresh_ttl=REFRESH_TOKEN_TTL,
-        )
+            # Extract jti from access token claims
+            claims = self._token_service.decode_access_token(access_token)
+            jti = claims["jti"]
 
-        return TokenPairDTO(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            session_id=session_id,
-        )
+            await self._token_store.create_session(
+                session_id=session_id,
+                user_id=user.id,
+                access_jti=jti,
+                refresh_token=refresh_token,
+                device_info=command.device_info,
+                access_ttl=ACCESS_TOKEN_TTL,
+                refresh_ttl=REFRESH_TOKEN_TTL,
+            )
+
+            duration_ms = round((time.monotonic() - start) * 1000, 2)
+            log.info(
+                "authenticate_user.success",
+                user_id=str(user.id),
+                session_id=str(session_id),
+                duration_ms=duration_ms,
+            )
+            return TokenPairDTO(
+                access_token=access_token,
+                refresh_token=refresh_token,
+                session_id=session_id,
+            )
+        except Exception as exc:
+            duration_ms = round((time.monotonic() - start) * 1000, 2)
+            log.warning("authenticate_user.failure", error=str(exc), duration_ms=duration_ms)
+            raise
