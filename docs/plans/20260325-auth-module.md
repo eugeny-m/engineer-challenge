@@ -115,20 +115,20 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
 - Create: `tests/unit/domain/test_user_entity.py`
 - Create: `tests/unit/domain/test_reset_token_entity.py`
 
-- [ ] implement `User` aggregate root — fields: `id` (UUID), `email: Email`, `hashed_password: HashedPassword`, `is_active: bool`, `created_at: datetime`; methods: `change_password(new_hash)`, `deactivate()`
-- [ ] implement `PasswordResetToken` entity — fields: `id`, `user_id`, `token: ResetToken`, `expires_at: datetime`, `used: bool`; method `consume()` enforces two independent invariants:
+- [x] implement `User` aggregate root — fields: `id` (UUID), `email: Email`, `hashed_password: HashedPassword`, `is_active: bool`, `created_at: datetime`; methods: `change_password(new_hash)`, `deactivate()`
+- [x] implement `PasswordResetToken` entity — fields: `id`, `user_id`, `token: ResetToken`, `expires_at: datetime`, `used: bool`; method `consume()` enforces two independent invariants:
   1. **TTL**: if `datetime.utcnow() >= expires_at` → raise `TokenExpiredError` (token too old)
   2. **Single-use**: if `used == True` → raise `TokenAlreadyUsedError` (replay attempt)
   - on valid token: set `used = True`, return self
   - important: both checks happen on every `consume()` call, order: TTL check first, then used check
-- [ ] write unit tests for `User` entity (creation, change_password, deactivate)
-- [ ] write unit tests for `PasswordResetToken` — all cases must be covered:
+- [x] write unit tests for `User` entity (creation, change_password, deactivate)
+- [x] write unit tests for `PasswordResetToken` — all cases must be covered:
   - `consume()` happy path: valid token, not expired, not used → succeeds, sets used=True
   - `consume()` expired: expires_at in the past → raises `TokenExpiredError`
   - `consume()` already used: used=True, not expired → raises `TokenAlreadyUsedError`
   - `consume()` called twice on same object: second call raises `TokenAlreadyUsedError`
   - `consume()` expired AND used: raises `TokenExpiredError` (TTL check takes priority)
-- [ ] run tests — must pass before task 4
+- [x] run tests — must pass before task 4
 
 ### Task 4: Domain layer — repository interfaces
 
