@@ -50,12 +50,16 @@ async def test_refresh_token_success():
 
     first_pair = await login("alice@example.com", "mypassword1", repo, hasher, token_svc, token_store)
 
+    old_jti = first_pair.access_token.split(":")[-1]
+
     handler = RefreshTokenHandler(token_svc, token_store)
     new_pair = await handler.handle(RefreshTokenCommand(refresh_token=first_pair.refresh_token))
 
     assert new_pair.access_token != first_pair.access_token
     assert new_pair.refresh_token != first_pair.refresh_token
     assert new_pair.session_id == first_pair.session_id
+    # Old access JTI must be invalidated after rotation
+    assert not await token_store.is_access_jti_valid(old_jti)
 
 
 @pytest.mark.asyncio

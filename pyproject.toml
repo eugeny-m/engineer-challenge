@@ -19,7 +19,6 @@ dependencies = [
     "structlog>=24.0.0",
     "redis[asyncio]>=5.0.0",
     "python-dotenv>=1.0.0",
-    "slowapi>=0.1.9",
 ]
 
 [project.optional-dependencies]

@@ -82,6 +82,29 @@ async def test_authenticate_user_not_found():
 
 
 @pytest.mark.asyncio
+async def test_authenticate_inactive_user_raises():
+    repo = FakeUserRepository()
+    user = User(
+        id=uuid.uuid4(),
+        email=Email("inactive@example.com"),
+        hashed_password=HashedPassword("hashed:mypassword1"),
+        is_active=False,
+        created_at=datetime.now(timezone.utc),
+    )
+    await repo.save(user)
+
+    hasher = FakePasswordHasher()
+    token_svc = FakeTokenService()
+    token_store = FakeTokenStore()
+    handler = AuthenticateUserHandler(repo, hasher, token_svc, token_store)
+
+    with pytest.raises(InvalidCredentialsError):
+        await handler.handle(
+            AuthenticateUserCommand(email="inactive@example.com", password="mypassword1")
+        )
+
+
+@pytest.mark.asyncio
 async def test_authenticate_returns_session_id():
     repo = FakeUserRepository()
     user = make_user("alice@example.com", "mypassword1")

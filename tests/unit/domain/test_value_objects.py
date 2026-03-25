@@ -81,6 +81,14 @@ class TestPlainPassword:
         assert "secret99" not in repr(pw)
         assert "secret99" not in str(pw)
 
+    def test_exactly_max_length(self):
+        pw = PlainPassword("a" * 127 + "1")  # 128 chars, contains digit
+        assert len(pw.value) == 128
+
+    def test_too_long(self):
+        with pytest.raises(WeakPasswordError):
+            PlainPassword("a" * 128 + "1")  # 129 chars
+
     def test_immutable(self):
         pw = PlainPassword("secure1!")
         with pytest.raises((AttributeError, TypeError)):

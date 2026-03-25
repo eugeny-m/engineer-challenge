@@ -10,10 +10,6 @@ from typing import AsyncGenerator
 import redis.asyncio as aioredis
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIASGIMiddleware
-from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
@@ -22,13 +18,6 @@ from auth_service.infrastructure.db.session import async_session_factory
 from auth_service.infrastructure.logging import configure_logging
 from auth_service.infrastructure.security.rate_limiter import RateLimiter, RateLimitExceededError
 from auth_service.presentation.graphql.schema import create_graphql_router
-
-# ---------------------------------------------------------------------------
-# SlowAPI limiter — provides HTTP 429 / Retry-After infrastructure.
-# Per-operation limits are enforced in GraphQLRateLimitMiddleware below.
-# ---------------------------------------------------------------------------
-limiter = Limiter(key_func=get_remote_address)
-
 
 # ---------------------------------------------------------------------------
 # Rate limit rules (operation → list of (dimension, limit, window_seconds))
@@ -162,12 +151,7 @@ async def get_context(request: Request) -> AsyncGenerator[dict, None]:
 
 app = FastAPI(title="Auth Service", lifespan=lifespan)
 
-# SlowAPI: register the state, exception handler, and ASGI middleware.
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(SlowAPIASGIMiddleware)
-
-# Custom GraphQL-aware rate limiting middleware (per-operation + email-keyed).
+# GraphQL-aware rate limiting middleware (per-operation + email-keyed).
 app.add_middleware(GraphQLRateLimitMiddleware)
 
 graphql_router = create_graphql_router(get_context)

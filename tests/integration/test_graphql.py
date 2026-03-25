@@ -335,9 +335,11 @@ class TestMeQuery:
         access_token = login_data["accessToken"]
         session_id = login_data["sessionId"]
 
-        # Revoke the session
+        # Revoke the session — auth header required (revokeSession requires Bearer token)
         await client.post(
-            "/graphql", json=gql(REVOKE_MUTATION, {"sessionId": session_id})
+            "/graphql",
+            json=gql(REVOKE_MUTATION, {"sessionId": session_id}),
+            headers={"Authorization": f"Bearer {access_token}"},
         )
 
         # me query should now return null (jti no longer in Redis)

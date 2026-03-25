@@ -211,6 +211,8 @@ async def test_revoke_all_user_sessions(store):
     for sid, jti in zip(session_ids, jtis):
         assert await store.is_access_jti_valid(jti) is False
         assert await store.get_session(sid) is None
+    for rt in ["rt-a", "rt-b", "rt-c"]:
+        assert await store.get_session_by_refresh_token(rt) is None
 
 
 async def test_revoke_all_user_sessions_no_sessions_does_not_raise(store):

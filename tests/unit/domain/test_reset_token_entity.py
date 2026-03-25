@@ -13,7 +13,7 @@ def make_token(*, expires_delta: timedelta = timedelta(minutes=15), used: bool =
         id=uuid4(),
         user_id=uuid4(),
         token=ResetToken("some-random-token-string"),
-        expires_at=datetime.utcnow() + expires_delta,
+        expires_at=datetime.now(timezone.utc) + expires_delta,
         used=used,
     )
 

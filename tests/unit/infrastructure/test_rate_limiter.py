@@ -21,6 +21,14 @@ class FakeRedis:
         self._store: dict[str, int] = {}
         self._ttls: dict[str, int] = {}
 
+    async def set(self, key: str, value: int, ex: int | None = None, nx: bool = False) -> bool:
+        if nx and key in self._store:
+            return False
+        self._store[key] = value
+        if ex is not None:
+            self._ttls[key] = ex
+        return True
+
     async def incr(self, key: str) -> int:
         self._store[key] = self._store.get(key, 0) + 1
         return self._store[key]
