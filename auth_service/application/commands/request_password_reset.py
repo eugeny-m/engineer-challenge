@@ -33,7 +33,7 @@ class RequestPasswordResetHandler:
 
     async def handle(self, command: RequestPasswordResetCommand) -> None:
         start = time.monotonic()
-        log = _log.bind(operation="request_password_reset", email=command.email)
+        log = _log.bind(operation="request_password_reset")
         log.info("request_password_reset.start")
 
         try:

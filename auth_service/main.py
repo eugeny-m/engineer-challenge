@@ -84,7 +84,14 @@ class GraphQLRateLimitMiddleware(BaseHTTPMiddleware):
         if operation not in _RATE_LIMITS:
             return await call_next(request)
 
-        ip = request.client.host if request.client else "unknown"
+        # Prefer X-Real-IP set by trusted reverse proxies; fall back to X-Forwarded-For
+        # (first entry is the originating client), then the transport-level address.
+        ip = (
+            request.headers.get("x-real-ip")
+            or (request.headers.get("x-forwarded-for", "").split(",")[0].strip() or None)
+            or (request.client.host if request.client else None)
+            or "unknown"
+        )
         email = self._extract_email(body) if operation in _EMAIL_OPS else None
 
         for dimension, limit, window in _RATE_LIMITS[operation]:

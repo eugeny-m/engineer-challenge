@@ -5,6 +5,7 @@ from uuid import UUID
 import redis.asyncio as aioredis
 
 from auth_service.application.ports.token_store import TokenStore
+from auth_service.domain.exceptions import InvalidTokenError
 
 
 class RedisTokenStore(TokenStore):
@@ -86,7 +87,10 @@ class RedisTokenStore(TokenStore):
             return None
         if isinstance(raw, bytes):
             raw = raw.decode()
-        user_id_str, session_id_str = raw.split(":", 1)
+        parts = raw.split(":", 1)
+        if len(parts) != 2:
+            raise InvalidTokenError("Malformed refresh token payload in store")
+        user_id_str, session_id_str = parts
         return {"user_id": user_id_str, "session_id": session_id_str}
 
     async def rotate_session(
@@ -101,7 +105,7 @@ class RedisTokenStore(TokenStore):
         # First, read the session to get user_id and old jti
         session_data = await self.get_session(session_id)
         if session_data is None:
-            return
+            raise InvalidTokenError("Session not found or expired during rotation")
 
         user_id = session_data["user_id"]
         old_jti = session_data.get("current_jti", "")

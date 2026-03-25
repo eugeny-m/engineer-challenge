@@ -36,7 +36,7 @@ class AuthenticateUserHandler:
 
     async def handle(self, command: AuthenticateUserCommand) -> TokenPairDTO:
         start = time.monotonic()
-        log = _log.bind(operation="authenticate_user", email=command.email)
+        log = _log.bind(operation="authenticate_user")
         log.info("authenticate_user.start")
 
         try:
