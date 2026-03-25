@@ -26,6 +26,7 @@ from auth_service.domain.exceptions import (
     InvalidTokenError,
     TokenAlreadyUsedError,
     TokenExpiredError,
+    TokenNotFoundError,
     UserAlreadyExistsError,
     UserNotFoundError,
     WeakPasswordError,
@@ -74,7 +75,7 @@ class AuthMutation:
                 session_id=strawberry.ID(str(result.session_id)),
                 token_type=result.token_type,
             )
-        except (InvalidCredentialsError, InvalidEmailError, UserNotFoundError) as exc:
+        except (InvalidCredentialsError, InvalidEmailError) as exc:
             raise strawberry.exceptions.StrawberryGraphQLError(str(exc)) from exc
 
     @strawberry.mutation
@@ -94,13 +95,39 @@ class AuthMutation:
 
     @strawberry.mutation
     async def revoke_session(self, info: Info, input: RevokeSessionInput) -> OperationResult:
+        request = info.context["request"]
         container = info.context["container"]
+
+        # Require a valid Bearer token; verify the session belongs to the caller.
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return OperationResult(success=False, message="Authentication required")
+        token = auth_header.removeprefix("Bearer ").strip()
+        try:
+            claims = container.token_service.decode_access_token(token)
+        except (TokenExpiredError, InvalidTokenError):
+            return OperationResult(success=False, message="Authentication required")
+
+        caller_user_id_str = claims.get("sub")
+        jti = claims.get("jti")
+        if not caller_user_id_str or not jti:
+            return OperationResult(success=False, message="Authentication required")
+        if not await container.token_store.is_access_jti_valid(jti):
+            return OperationResult(success=False, message="Authentication required")
+
+        session_id = UUID(str(input.session_id))
+        session_data = await container.token_store.get_session(session_id)
+        if session_data is None:
+            return OperationResult(success=False, message="Session not found")
+        if session_data.get("user_id") != caller_user_id_str:
+            return OperationResult(success=False, message="Not authorised to revoke this session")
+
         handler: RevokeSessionHandler = container.revoke_session_handler
         try:
-            await handler.handle(RevokeSessionCommand(session_id=UUID(str(input.session_id))))
+            await handler.handle(RevokeSessionCommand(session_id=session_id))
             return OperationResult(success=True, message="Session revoked")
-        except Exception as exc:
-            return OperationResult(success=False, message=str(exc))
+        except Exception:
+            return OperationResult(success=False, message="Internal error")
 
     @strawberry.mutation
     async def request_password_reset(
@@ -129,5 +156,5 @@ class AuthMutation:
             return OperationResult(success=False, message=str(exc))
         except TokenAlreadyUsedError as exc:
             return OperationResult(success=False, message=str(exc))
-        except (WeakPasswordError, InvalidTokenError) as exc:
+        except (TokenNotFoundError, UserNotFoundError, WeakPasswordError, InvalidTokenError) as exc:
             return OperationResult(success=False, message=str(exc))

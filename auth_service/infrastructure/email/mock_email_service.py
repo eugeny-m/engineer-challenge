@@ -15,6 +15,6 @@ class MockEmailService(EmailService):
         logger.info(
             "password_reset_email_sent",
             to_email=to_email,
-            reset_token=reset_token,
+            reset_token_prefix=reset_token[:8] + "...",
             note="MOCK — no real email sent",
         )

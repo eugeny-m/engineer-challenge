@@ -5,16 +5,16 @@ from auth_service.application.dto import AuthenticateUserCommand, TokenPairDTO
 from auth_service.application.ports.password_hasher import PasswordHasher
 from auth_service.application.ports.token_service import TokenService
 from auth_service.application.ports.token_store import TokenStore
-from auth_service.domain.exceptions import InvalidCredentialsError, UserNotFoundError
+from auth_service.domain.exceptions import InvalidCredentialsError
 from auth_service.domain.repositories.user_repository import UserRepository
 from auth_service.domain.value_objects.email import Email
 from auth_service.infrastructure.logging import get_logger
 
 _log = get_logger(__name__)
 
-# TTL constants (seconds)
-ACCESS_TOKEN_TTL = 15 * 60       # 15 minutes
-REFRESH_TOKEN_TTL = 30 * 24 * 3600  # 30 days
+# Default TTL constants (seconds) — overridden at construction time via container.
+_DEFAULT_ACCESS_TOKEN_TTL = 15 * 60       # 15 minutes
+_DEFAULT_REFRESH_TOKEN_TTL = 30 * 24 * 3600  # 30 days
 
 
 class AuthenticateUserHandler:
@@ -24,11 +24,15 @@ class AuthenticateUserHandler:
         hasher: PasswordHasher,
         token_service: TokenService,
         token_store: TokenStore,
+        access_ttl: int = _DEFAULT_ACCESS_TOKEN_TTL,
+        refresh_ttl: int = _DEFAULT_REFRESH_TOKEN_TTL,
     ) -> None:
         self._user_repo = user_repo
         self._hasher = hasher
         self._token_service = token_service
         self._token_store = token_store
+        self._access_ttl = access_ttl
+        self._refresh_ttl = refresh_ttl
 
     async def handle(self, command: AuthenticateUserCommand) -> TokenPairDTO:
         start = time.monotonic()
@@ -39,6 +43,9 @@ class AuthenticateUserHandler:
             email = Email(command.email)
             user = await self._user_repo.find_by_email(email)
             if user is None:
+                raise InvalidCredentialsError("Invalid email or password")
+
+            if not user.is_active:
                 raise InvalidCredentialsError("Invalid email or password")
 
             if not self._hasher.verify(command.password, user.hashed_password.value):
@@ -52,14 +59,16 @@ class AuthenticateUserHandler:
             claims = self._token_service.decode_access_token(access_token)
             jti = claims["jti"]
 
+            device_info = (command.device_info or "")[:512] or None
+
             await self._token_store.create_session(
                 session_id=session_id,
                 user_id=user.id,
                 access_jti=jti,
                 refresh_token=refresh_token,
-                device_info=command.device_info,
-                access_ttl=ACCESS_TOKEN_TTL,
-                refresh_ttl=REFRESH_TOKEN_TTL,
+                device_info=device_info,
+                access_ttl=self._access_ttl,
+                refresh_ttl=self._refresh_ttl,
             )
 
             duration_ms = round((time.monotonic() - start) * 1000, 2)

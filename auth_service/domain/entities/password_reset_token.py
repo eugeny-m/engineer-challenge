@@ -15,7 +15,7 @@ class PasswordResetToken:
     used: bool
 
     def consume(self) -> "PasswordResetToken":
-        now = datetime.now(timezone.utc) if self.expires_at.tzinfo is not None else datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if now >= self.expires_at:
             raise TokenExpiredError("Reset token has expired")
         if self.used:

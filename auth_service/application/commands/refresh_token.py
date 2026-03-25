@@ -8,14 +8,22 @@ from auth_service.infrastructure.logging import get_logger
 
 _log = get_logger(__name__)
 
-ACCESS_TOKEN_TTL = 15 * 60
-REFRESH_TOKEN_TTL = 30 * 24 * 3600
+_DEFAULT_ACCESS_TOKEN_TTL = 15 * 60
+_DEFAULT_REFRESH_TOKEN_TTL = 30 * 24 * 3600
 
 
 class RefreshTokenHandler:
-    def __init__(self, token_service: TokenService, token_store: TokenStore) -> None:
+    def __init__(
+        self,
+        token_service: TokenService,
+        token_store: TokenStore,
+        access_ttl: int = _DEFAULT_ACCESS_TOKEN_TTL,
+        refresh_ttl: int = _DEFAULT_REFRESH_TOKEN_TTL,
+    ) -> None:
         self._token_service = token_service
         self._token_store = token_store
+        self._access_ttl = access_ttl
+        self._refresh_ttl = refresh_ttl
 
     async def handle(self, command: RefreshTokenCommand) -> TokenPairDTO:
         start = time.monotonic()
@@ -41,8 +49,8 @@ class RefreshTokenHandler:
                 old_refresh_token=command.refresh_token,
                 new_access_jti=new_jti,
                 new_refresh_token=new_refresh_token,
-                access_ttl=ACCESS_TOKEN_TTL,
-                refresh_ttl=REFRESH_TOKEN_TTL,
+                access_ttl=self._access_ttl,
+                refresh_ttl=self._refresh_ttl,
             )
 
             duration_ms = round((time.monotonic() - start) * 1000, 2)

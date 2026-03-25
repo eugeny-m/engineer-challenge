@@ -63,10 +63,14 @@ class RequestScope:
             hasher=global_container.hasher,
             token_service=global_container.token_service,
             token_store=global_container.token_store,
+            access_ttl=global_container.access_token_ttl_seconds,
+            refresh_ttl=global_container.refresh_token_ttl_seconds,
         )
         self.refresh_token_handler = RefreshTokenHandler(
             token_service=global_container.token_service,
             token_store=global_container.token_store,
+            access_ttl=global_container.access_token_ttl_seconds,
+            refresh_ttl=global_container.refresh_token_ttl_seconds,
         )
         self.revoke_session_handler = RevokeSessionHandler(
             token_store=global_container.token_store,
@@ -75,6 +79,7 @@ class RequestScope:
             user_repo=self.user_repo,
             reset_token_repo=self._reset_token_repo,
             email_service=global_container.email_service,
+            expire_minutes=global_container.reset_token_expire_minutes,
         )
         self.reset_password_handler = ResetPasswordHandler(
             user_repo=self.user_repo,
@@ -94,8 +99,16 @@ class GlobalContainer:
     ) -> None:
         self._session_factory = session_factory
 
-        jwt_secret = os.environ.get("JWT_SECRET", "change-me-in-production")
+        jwt_secret = os.environ.get("JWT_SECRET")
+        if not jwt_secret:
+            raise RuntimeError("JWT_SECRET environment variable must be set")
         access_ttl_minutes = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
+        refresh_ttl_days = int(os.environ.get("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
+        reset_token_expire_minutes = int(os.environ.get("RESET_TOKEN_EXPIRE_MINUTES", "15"))
+
+        self.access_token_ttl_seconds = access_ttl_minutes * 60
+        self.refresh_token_ttl_seconds = refresh_ttl_days * 24 * 3600
+        self.reset_token_expire_minutes = reset_token_expire_minutes
 
         self.hasher = BcryptHasher()
         self.token_service: TokenService = JwtTokenService(

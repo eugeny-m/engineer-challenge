@@ -78,12 +78,12 @@ class RateLimiter:
         """
         redis_key = f"rl:{key}"
 
-        # INCR is atomic — creates the key with value 1 if it does not exist.
+        # SET NX EX initialises the key with value "0" and a TTL atomically.
+        # This ensures the TTL is always set before the first INCR, eliminating
+        # the race condition where the key could exist without an expiry if the
+        # process crashes between INCR and EXPIRE.
+        await self._redis.set(redis_key, 0, ex=window_seconds, nx=True)
         count = await self._redis.incr(redis_key)
-
-        if count == 1:
-            # New window — set the expiry so the key auto-deletes.
-            await self._redis.expire(redis_key, window_seconds)
 
         if count > limit:
             ttl = await self._redis.ttl(redis_key)

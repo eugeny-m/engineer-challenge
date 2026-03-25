@@ -14,5 +14,5 @@ class BcryptHasher(PasswordHasher):
     def verify(self, plain_password: str, hashed_password: str) -> bool:
         try:
             return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
-        except Exception:
+        except ValueError:
             return False

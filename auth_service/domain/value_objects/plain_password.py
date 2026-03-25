@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from auth_service.domain.exceptions import WeakPasswordError
 
 _MIN_LENGTH = 8
+_MAX_LENGTH = 128
 
 
 @dataclass(frozen=True)
@@ -13,6 +14,10 @@ class PlainPassword:
         if len(self.value) < _MIN_LENGTH:
             raise WeakPasswordError(
                 f"Password must be at least {_MIN_LENGTH} characters long."
+            )
+        if len(self.value) > _MAX_LENGTH:
+            raise WeakPasswordError(
+                f"Password must be at most {_MAX_LENGTH} characters long."
             )
         if not any(ch.isdigit() for ch in self.value):
             raise WeakPasswordError("Password must contain at least one digit.")
