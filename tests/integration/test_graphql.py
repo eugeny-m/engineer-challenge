@@ -397,13 +397,14 @@ class TestRefreshToken:
 @skip_no_services
 class TestPasswordReset:
     async def test_request_reset_unknown_email(self, test_client):
+        # Unknown email returns success=True to prevent email enumeration.
         client, _ = test_client
         resp = await client.post(
             "/graphql",
             json=gql(REQUEST_RESET_MUTATION, {"email": "nobody-reset@example.com"}),
         )
         data = resp.json()["data"]["requestPasswordReset"]
-        assert data["success"] is False
+        assert data["success"] is True
 
     async def test_request_reset_success_token_in_db(self, test_client):
         client, container = test_client
@@ -419,7 +420,7 @@ class TestPasswordReset:
         assert data["success"] is True
 
     async def test_full_password_reset_flow(self, test_client, test_session_factory):
-        """register → request_reset → read token from DB → reset → login with new password."""
+        """register → request_reset → retrieve raw token from mock email → reset → login."""
         client, container = test_client
         email = f"fullreset-{uuid.uuid4().hex[:8]}@example.com"
         old_pass = "OldPass123"
@@ -430,28 +431,14 @@ class TestPasswordReset:
             "/graphql", json=gql(REGISTER_MUTATION, {"email": email, "password": old_pass})
         )
 
-        # Request reset
+        # Request reset — raw token is captured by MockEmailService
         await client.post(
             "/graphql", json=gql(REQUEST_RESET_MUTATION, {"email": email})
         )
 
-        # Read token directly from DB
-        from sqlalchemy import select, text
-        from auth_service.infrastructure.db.models import PasswordResetTokenModel, UserModel
-        from auth_service.domain.value_objects.email import Email
-
-        async with test_session_factory() as session:
-            user_result = await session.execute(
-                select(UserModel).where(UserModel.email == email)
-            )
-            user_model = user_result.scalar_one()
-            token_result = await session.execute(
-                select(PasswordResetTokenModel).where(
-                    PasswordResetTokenModel.user_id == user_model.id
-                )
-            )
-            token_model = token_result.scalar_one()
-            raw_token = token_model.token
+        # Retrieve the raw token from the mock email service (the DB stores its hash)
+        assert container.email_service.sent_emails, "Expected a reset email to be sent"
+        raw_token = container.email_service.sent_emails[-1][1]
 
         # Reset password
         resp = await client.post(
@@ -475,7 +462,7 @@ class TestPasswordReset:
 
     async def test_reset_token_single_use(self, test_client, test_session_factory):
         """Consuming a reset token twice raises TokenAlreadyUsedError."""
-        client, _ = test_client
+        client, container = test_client
         email = f"singleuse-{uuid.uuid4().hex[:8]}@example.com"
 
         await client.post(
@@ -485,20 +472,9 @@ class TestPasswordReset:
             "/graphql", json=gql(REQUEST_RESET_MUTATION, {"email": email})
         )
 
-        from sqlalchemy import select
-        from auth_service.infrastructure.db.models import PasswordResetTokenModel, UserModel
-
-        async with test_session_factory() as session:
-            user_result = await session.execute(
-                select(UserModel).where(UserModel.email == email)
-            )
-            user_model = user_result.scalar_one()
-            token_result = await session.execute(
-                select(PasswordResetTokenModel).where(
-                    PasswordResetTokenModel.user_id == user_model.id
-                )
-            )
-            raw_token = token_result.scalar_one().token
+        # Retrieve the raw token from the mock email service (the DB stores its hash)
+        assert container.email_service.sent_emails, "Expected a reset email to be sent"
+        raw_token = container.email_service.sent_emails[-1][1]
 
         # First use — success
         first = await client.post(

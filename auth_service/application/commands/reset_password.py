@@ -1,3 +1,4 @@
+import hashlib
 import time
 
 from auth_service.application.dto import ResetPasswordCommand
@@ -35,7 +36,8 @@ class ResetPasswordHandler:
             # Validate new password strength before hitting the DB
             PlainPassword(command.new_password)
 
-            reset_token = await self._reset_token_repo.find_by_token(command.token)
+            token_hash = hashlib.sha256(command.token.encode()).hexdigest()
+            reset_token = await self._reset_token_repo.find_by_token(token_hash)
             if reset_token is None:
                 raise TokenNotFoundError("Reset token not found")
 

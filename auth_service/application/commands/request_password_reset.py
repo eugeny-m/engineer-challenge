@@ -1,3 +1,4 @@
+import hashlib
 import secrets
 import time
 import uuid
@@ -51,7 +52,12 @@ class RequestPasswordResetHandler:
             # Invalidate all previous reset tokens for this user (one active token invariant)
             await self._reset_token_repo.delete_all_by_user_id(user.id)
 
-            token_value = ResetToken(value=secrets.token_urlsafe(32))
+            raw_token = secrets.token_urlsafe(32)
+            # Store only a SHA-256 hash in the database so that a DB breach does not
+            # expose usable reset tokens.  The raw token is sent to the user's email
+            # and never persisted.
+            token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+            token_value = ResetToken(value=token_hash)
             expires_at = datetime.now(timezone.utc) + timedelta(minutes=self._expire_minutes)
             reset_token = PasswordResetToken(
                 id=uuid.uuid4(),
@@ -61,7 +67,7 @@ class RequestPasswordResetHandler:
                 used=False,
             )
             await self._reset_token_repo.save(reset_token)
-            await self._email_service.send_reset_email(email.value, token_value.value)
+            await self._email_service.send_reset_email(email.value, raw_token)
 
             duration_ms = round((time.monotonic() - start) * 1000, 2)
             log.info(

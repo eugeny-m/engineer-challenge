@@ -22,7 +22,7 @@ class RegisterUserHandler:
 
     async def handle(self, command: RegisterUserCommand) -> None:
         start = time.monotonic()
-        log = _log.bind(operation="register_user", email=command.email)
+        log = _log.bind(operation="register_user")
         log.info("register_user.start")
 
         try:

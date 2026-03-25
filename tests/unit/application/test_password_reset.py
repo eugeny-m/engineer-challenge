@@ -1,3 +1,4 @@
+import hashlib
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -35,11 +36,16 @@ def make_user(email: str) -> User:
     )
 
 
+def _tok_hash(raw: str) -> str:
+    """Return the SHA-256 hex digest of raw — matches the hashing done by the handlers."""
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
 def make_expired_token(user_id: uuid.UUID) -> PasswordResetToken:
     return PasswordResetToken(
         id=uuid.uuid4(),
         user_id=user_id,
-        token=ResetToken(value="expired-token-value"),
+        token=ResetToken(value=_tok_hash("expired-token-value")),
         expires_at=datetime.now(timezone.utc) - timedelta(minutes=1),
         used=False,
     )
@@ -49,7 +55,7 @@ def make_valid_token(user_id: uuid.UUID) -> PasswordResetToken:
     return PasswordResetToken(
         id=uuid.uuid4(),
         user_id=user_id,
-        token=ResetToken(value="valid-token-value"),
+        token=ResetToken(value=_tok_hash("valid-token-value")),
         expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
         used=False,
     )
@@ -133,8 +139,8 @@ async def test_reset_password_success():
     updated_user = await repo.find_by_id(user.id)
     assert updated_user.hashed_password.value == "hashed:newpass1"
 
-    # Token should be marked as used
-    saved_token = await token_repo.find_by_token("valid-token-value")
+    # Token should be marked as used (stored under its SHA-256 hash)
+    saved_token = await token_repo.find_by_token(_tok_hash("valid-token-value"))
     assert saved_token.used is True
 
 

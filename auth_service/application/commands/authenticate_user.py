@@ -16,6 +16,11 @@ _log = get_logger(__name__)
 _DEFAULT_ACCESS_TOKEN_TTL = 15 * 60       # 15 minutes
 _DEFAULT_REFRESH_TOKEN_TTL = 30 * 24 * 3600  # 30 days
 
+# Cached dummy hash — populated lazily on first login attempt for a non-existent user.
+# Used to equalise response time regardless of whether the email exists, preventing
+# email enumeration via timing side-channel.
+_dummy_hash_cache: str = ""
+
 
 class AuthenticateUserHandler:
     def __init__(
@@ -43,6 +48,12 @@ class AuthenticateUserHandler:
             email = Email(command.email)
             user = await self._user_repo.find_by_email(email)
             if user is None:
+                # Run a dummy verification to equalise timing with the real path,
+                # preventing email enumeration via response-time differences.
+                global _dummy_hash_cache
+                if not _dummy_hash_cache:
+                    _dummy_hash_cache = self._hasher.hash("__dummy_timing_guard__")
+                self._hasher.verify(command.password, _dummy_hash_cache)
                 raise InvalidCredentialsError("Invalid email or password")
 
             if not user.is_active:
