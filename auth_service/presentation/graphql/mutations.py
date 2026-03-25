@@ -54,8 +54,9 @@ class AuthMutation:
             return OperationResult(success=True, message="User registered successfully")
         except (InvalidEmailError, WeakPasswordError) as exc:
             return OperationResult(success=False, message=str(exc))
-        except UserAlreadyExistsError as exc:
-            return OperationResult(success=False, message=str(exc))
+        except UserAlreadyExistsError:
+            # Return a generic message to prevent email enumeration.
+            return OperationResult(success=False, message="Registration could not be completed")
 
     @strawberry.mutation
     async def login(self, info: Info, input: LoginInput) -> AuthPayload:

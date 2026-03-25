@@ -112,8 +112,8 @@ class RedisTokenStore(TokenStore):
         now_iso = datetime.now(tz=timezone.utc).isoformat()
 
         async with self._redis.pipeline(transaction=True) as pipe:
-            # Remove old refresh token
-            pipe.delete(self._refresh_key(old_refresh_token))
+            # Note: old_refresh_token was already atomically deleted by GETDEL in
+            # get_session_by_refresh_token; no need to delete it again here.
             # Remove old access jti
             if old_jti:
                 pipe.delete(self._access_key(old_jti))
@@ -158,7 +158,10 @@ class RedisTokenStore(TokenStore):
 
     async def revoke_all_user_sessions(self, user_id: UUID) -> None:
         session_ids_raw = await self._redis.smembers(self._user_sessions_key(user_id))
+        # Delete the user-sessions set before revoking individual sessions so that
+        # any concurrent login after this point writes to a fresh set and its
+        # sessions are not accidentally left dangling.
+        await self._redis.delete(self._user_sessions_key(user_id))
         for sid_bytes in session_ids_raw:
             sid_str = sid_bytes.decode() if isinstance(sid_bytes, bytes) else sid_bytes
             await self.revoke_session(UUID(sid_str))
-        await self._redis.delete(self._user_sessions_key(user_id))

@@ -81,13 +81,13 @@ class TestPlainPassword:
         assert "secret99" not in repr(pw)
         assert "secret99" not in str(pw)
 
-    def test_exactly_max_length(self):
-        pw = PlainPassword("a" * 127 + "1")  # 128 chars, contains digit
-        assert len(pw.value) == 128
+    def test_exactly_max_bytes(self):
+        pw = PlainPassword("a" * 71 + "1")  # 72 ASCII bytes, contains digit
+        assert len(pw.value.encode("utf-8")) == 72
 
-    def test_too_long(self):
+    def test_too_long_bytes(self):
         with pytest.raises(WeakPasswordError):
-            PlainPassword("a" * 128 + "1")  # 129 chars
+            PlainPassword("a" * 72 + "1")  # 73 bytes — exceeds bcrypt 72-byte limit
 
     def test_immutable(self):
         pw = PlainPassword("secure1!")

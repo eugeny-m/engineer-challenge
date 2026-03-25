@@ -116,7 +116,10 @@ class GraphQLRateLimitMiddleware(BaseHTTPMiddleware):
         match = _MUTATION_OP_RE.search(query)
         if match:
             return match.group(1)
-        return body.get("operationName") or ""
+        # Do NOT fall back to body["operationName"]: it is user-supplied and could
+        # be any string that does not correspond to the actual mutation field name,
+        # allowing callers to bypass per-operation rate limits.
+        return ""
 
     @staticmethod
     def _extract_email(body: dict) -> str | None:

@@ -116,6 +116,9 @@ class GlobalContainer:
             access_token_expire_minutes=access_ttl_minutes,
         )
         self.token_store: TokenStore = RedisTokenStore(redis_client)
+        # MockEmailService logs tokens to stdout; suitable for development only.
+        # Set EMAIL_BACKEND=smtp (and configure SMTP_* vars) for production.
+        # TODO: add SmtpEmailService and select based on EMAIL_BACKEND env var.
         self.email_service = MockEmailService()
         self.rate_limiter = RateLimiter(redis_client)
 
