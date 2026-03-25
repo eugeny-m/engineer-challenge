@@ -1,4 +1,5 @@
 import time
+from uuid import UUID
 
 from auth_service.application.dto import RefreshTokenCommand, TokenPairDTO
 from auth_service.application.ports.token_service import TokenService
@@ -35,8 +36,8 @@ class RefreshTokenHandler:
             if session_data is None:
                 raise InvalidTokenError("Invalid or expired refresh token")
 
-            user_id = session_data["user_id"]
-            session_id = session_data["session_id"]
+            user_id = UUID(session_data["user_id"])
+            session_id = UUID(session_data["session_id"])
 
             new_access_token = self._token_service.generate_access_token(user_id, session_id)
             new_refresh_token = self._token_service.generate_refresh_token()

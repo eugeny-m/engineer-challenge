@@ -121,10 +121,12 @@ class FakeTokenStore(TokenStore):
         return jti in self.access_jtis
 
     async def get_session_by_refresh_token(self, refresh_token: str) -> dict | None:
-        data = self.refresh_tokens.get(refresh_token)
+        # Pop the token to simulate GETDEL (single-use enforcement)
+        data = self.refresh_tokens.pop(refresh_token, None)
         if data is None:
             return None
-        return data
+        # Return string values to match the real Redis implementation contract
+        return {"user_id": str(data["user_id"]), "session_id": str(data["session_id"])}
 
     async def rotate_session(
         self,

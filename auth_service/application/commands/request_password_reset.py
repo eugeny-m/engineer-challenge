@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from auth_service.application.dto import RequestPasswordResetCommand
 from auth_service.application.ports.email_service import EmailService
 from auth_service.domain.entities.password_reset_token import PasswordResetToken
-from auth_service.domain.exceptions import UserNotFoundError
+
 from auth_service.domain.repositories.reset_token_repository import ResetTokenRepository
 from auth_service.domain.repositories.user_repository import UserRepository
 from auth_service.domain.value_objects.email import Email
@@ -40,11 +40,13 @@ class RequestPasswordResetHandler:
             email = Email(command.email)
             user = await self._user_repo.find_by_email(email)
 
-            # Product decision: raise UserNotFoundError on unknown email for UX clarity.
-            # Trade-off: the security-correct approach would silently return to prevent email
-            # enumeration. Change raise to `return` if the threat model requires it.
+            # Silently return when the email is not registered to prevent email enumeration.
+            # Callers receive a success response regardless, so they cannot distinguish
+            # between a registered and unregistered address.
             if user is None:
-                raise UserNotFoundError(f"No account found for email {email.value}")
+                duration_ms = round((time.monotonic() - start) * 1000, 2)
+                log.info("request_password_reset.no_account", duration_ms=duration_ms)
+                return
 
             # Invalidate all previous reset tokens for this user (one active token invariant)
             await self._reset_token_repo.delete_all_by_user_id(user.id)

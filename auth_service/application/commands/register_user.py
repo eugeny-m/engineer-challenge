@@ -31,7 +31,7 @@ class RegisterUserHandler:
 
             existing = await self._user_repo.find_by_email(email)
             if existing is not None:
-                raise UserAlreadyExistsError(f"User with email {email.value} already exists")
+                raise UserAlreadyExistsError("An account with this email already exists")
 
             hashed = HashedPassword(self._hasher.hash(command.password))
             user = User(

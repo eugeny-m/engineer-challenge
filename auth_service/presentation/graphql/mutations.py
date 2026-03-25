@@ -138,8 +138,6 @@ class AuthMutation:
         try:
             await handler.handle(RequestPasswordResetCommand(email=input.email))
             return OperationResult(success=True, message="Password reset email sent")
-        except UserNotFoundError as exc:
-            return OperationResult(success=False, message=str(exc))
         except InvalidEmailError as exc:
             return OperationResult(success=False, message=str(exc))
 

@@ -78,7 +78,10 @@ class RedisTokenStore(TokenStore):
         return bool(await self._redis.exists(self._access_key(jti)))
 
     async def get_session_by_refresh_token(self, refresh_token: str) -> dict | None:
-        raw = await self._redis.get(self._refresh_key(refresh_token))
+        # GETDEL atomically reads and deletes the refresh token key so that a second
+        # concurrent caller presenting the same token gets None and is rejected,
+        # enforcing the single-use rotation guarantee.
+        raw = await self._redis.getdel(self._refresh_key(refresh_token))
         if raw is None:
             return None
         if isinstance(raw, bytes):
