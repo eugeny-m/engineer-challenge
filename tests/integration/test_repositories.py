@@ -3,6 +3,7 @@ import asyncio
 import os
 import uuid
 from datetime import datetime, timezone, timedelta
+from urllib.parse import urlparse
 
 import pytest
 import pytest_asyncio
@@ -31,8 +32,9 @@ def _check_db_available() -> bool:
     import socket
 
     try:
-        host = "postgres"
-        port = 5432
+        _parsed = urlparse(_TEST_DB_URL)
+        host = _parsed.hostname or "localhost"
+        port = _parsed.port or 5432
         with socket.create_connection((host, port), timeout=1):
             return True
     except OSError:

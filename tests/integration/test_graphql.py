@@ -6,6 +6,7 @@ import socket
 import uuid
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+from urllib.parse import urlparse
 
 import pytest
 import pytest_asyncio
@@ -40,8 +41,14 @@ def _port_open(host: str, port: int) -> bool:
         return False
 
 
-_db_available = _port_open("postgres", 5432)
-_redis_available = _port_open("redis", 6379)
+_parsed_db = urlparse(_TEST_DB_URL)
+_db_host = _parsed_db.hostname or "localhost"
+_db_port = _parsed_db.port or 5432
+_parsed_redis = urlparse(_REDIS_URL)
+_redis_host = _parsed_redis.hostname or "localhost"
+_redis_port = _parsed_redis.port or 6379
+_db_available = _port_open(_db_host, _db_port)
+_redis_available = _port_open(_redis_host, _redis_port)
 _services_available = _db_available and _redis_available
 
 skip_no_services = pytest.mark.skipif(
