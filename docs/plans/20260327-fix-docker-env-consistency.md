@@ -68,11 +68,11 @@ Two related problems in the current config:
 **Files:**
 - Modify: `.env.example`
 
-- [ ] Ensure all vars use `KEY=value` format
-- [ ] Use `localhost` URLs (local dev template)
-- [ ] Add `REDIS_TOKEN_TEST_URL=redis://localhost:6379/1`
-- [ ] Add `REDIS_TEST_URL=redis://localhost:6379/2` (was missing)
-- [ ] Remove `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` if present
+- [x] Ensure all vars use `KEY=value` format
+- [x] Use `localhost` URLs (local dev template)
+- [x] Add `REDIS_TOKEN_TEST_URL=redis://localhost:6379/1`
+- [x] Add `REDIS_TEST_URL=redis://localhost:6379/2` (was missing)
+- [x] Remove `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` if present
 
 ### Task 5: Fix `test_infrastructure.py` — derive host/port from URL env vars
 
