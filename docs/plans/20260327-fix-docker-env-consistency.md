@@ -34,12 +34,12 @@ Two related problems in the current config:
 **Files:**
 - Modify: `.env`
 
-- [ ] Remove lines 1–9 that use broken YAML syntax (`KEY: "value"`) and Docker service names
-- [ ] Ensure all vars use `KEY=value` format (no colons, no quotes)
-- [ ] Use `localhost` in DB_URL, DB_TEST_URL, REDIS_URL, REDIS_TEST_URL
-- [ ] Add `REDIS_TOKEN_TEST_URL=redis://localhost:6379/1` (for token store tests, DB1)
-- [ ] Remove `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (these are postgres container vars, not app config)
-- [ ] Final `.env` should have: DB_URL, DB_TEST_URL, REDIS_URL, REDIS_TEST_URL, REDIS_TOKEN_TEST_URL, JWT_SECRET, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, RESET_TOKEN_EXPIRE_MINUTES, LOG_FORMAT
+- [x] Remove lines 1–9 that use broken YAML syntax (`KEY: "value"`) and Docker service names
+- [x] Ensure all vars use `KEY=value` format (no colons, no quotes)
+- [x] Use `localhost` in DB_URL, DB_TEST_URL, REDIS_URL, REDIS_TEST_URL
+- [x] Add `REDIS_TOKEN_TEST_URL=redis://localhost:6379/1` (for token store tests, DB1)
+- [x] Remove `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (these are postgres container vars, not app config)
+- [x] Final `.env` should have: DB_URL, DB_TEST_URL, REDIS_URL, REDIS_TEST_URL, REDIS_TOKEN_TEST_URL, JWT_SECRET, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, RESET_TOKEN_EXPIRE_MINUTES, LOG_FORMAT
 
 ### Task 2: Create `.env.docker` for Docker Compose
 
