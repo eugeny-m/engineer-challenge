@@ -46,13 +46,13 @@ Two related problems in the current config:
 **Files:**
 - Create: `.env.docker`
 
-- [ ] Create `.env.docker` with same vars as `.env` but using Docker service names (`postgres`, `redis`) instead of `localhost`
-- [ ] DB_URL: `postgresql+asyncpg://auth_user:auth_password@postgres:5432/auth`
-- [ ] DB_TEST_URL: `postgresql+asyncpg://auth_user:auth_password@postgres:5432/auth_test`
-- [ ] REDIS_URL: `redis://redis:6379/0`
-- [ ] REDIS_TEST_URL: `redis://redis:6379/2`
-- [ ] REDIS_TOKEN_TEST_URL: `redis://redis:6379/1`
-- [ ] All other vars (JWT_SECRET, token expiry, LOG_FORMAT) same as `.env`
+- [x] Create `.env.docker` with same vars as `.env` but using Docker service names (`postgres`, `redis`) instead of `localhost`
+- [x] DB_URL: `postgresql+asyncpg://auth_user:auth_password@postgres:5432/auth`
+- [x] DB_TEST_URL: `postgresql+asyncpg://auth_user:auth_password@postgres:5432/auth_test`
+- [x] REDIS_URL: `redis://redis:6379/0`
+- [x] REDIS_TEST_URL: `redis://redis:6379/2`
+- [x] REDIS_TOKEN_TEST_URL: `redis://redis:6379/1`
+- [x] All other vars (JWT_SECRET, token expiry, LOG_FORMAT) same as `.env`
 
 ### Task 3: Update `docker-compose.yml` to use `.env.docker`
 
