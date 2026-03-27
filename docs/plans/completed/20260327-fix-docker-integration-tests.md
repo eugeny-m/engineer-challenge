@@ -78,7 +78,7 @@ Stop any further execution and exit if they are not.
 
 ### Task 5: [Final] Update documentation
 
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Move this plan to `docs/plans/completed/`
 
 ## Technical Details
 
