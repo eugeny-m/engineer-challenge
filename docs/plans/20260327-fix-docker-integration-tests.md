@@ -68,8 +68,8 @@ Stop any further execution and exit if they are not.
 **Files:**
 - Modify: `docker/docker-compose.yml`
 
-- [ ] Add `DB_TEST_URL: "postgresql+asyncpg://auth_user:auth_password@postgres:5432/auth_test"` to the `app` service environment block
-- [ ] Add `REDIS_TEST_URL: "redis://redis:6379/2"` to the `app` service environment block (used by `test_graphql.py`)
+- [x] Add `DB_TEST_URL: "postgresql+asyncpg://auth_user:auth_password@postgres:5432/auth_test"` to the `app` service environment block
+- [x] Add `REDIS_TEST_URL: "redis://redis:6379/2"` to the `app` service environment block (used by `test_graphql.py`)
 
 ### Task 4: Verify acceptance criteria
 

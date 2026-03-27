@@ -41,6 +41,8 @@ services:
       - "8000:8000"
     env_file:
       - ../.env
+    volumes:
+      - ../tests:/app/tests
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,6 +51,8 @@ services:
     environment:
       DB_URL: "postgresql+asyncpg://auth_user:auth_password@postgres:5432/auth"
       REDIS_URL: "redis://redis:6379/0"
+      DB_TEST_URL: "postgresql+asyncpg://auth_user:auth_password@postgres:5432/auth_test"
+      REDIS_TEST_URL: "redis://redis:6379/2"
 
 volumes:
   pgdata:
