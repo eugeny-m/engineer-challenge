@@ -36,7 +36,7 @@ def _check_db_available() -> bool:
         with socket.create_connection((host, port), timeout=1):
             return True
     except OSError:
-        raise
+        return False
 
 
 _db_available = _check_db_available()

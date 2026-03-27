@@ -52,22 +52,22 @@ so the database schema is always up to date.
 | REFRESH_TOKEN_EXPIRE_DAYS | 30 | Refresh token lifetime |
 | RESET_TOKEN_EXPIRE_MINUTES | 15 | Password-reset token lifetime |
 | ENV | production | Set to `development` for console logs |
+| DB_TEST_URL | (postgres service default) | asyncpg URL for the `auth_test` database; used by integration tests |
+| REDIS_TEST_URL | (redis service default) | Redis URL for integration tests (DB index 2) |
 
 ### Run tests
 
 ```bash
-# Unit tests only (no services required)
+# Unit tests only (no services required — run locally)
 pytest tests/unit/ -v
 
-# Full suite (integration tests skip gracefully when Postgres/Redis are unavailable)
-pytest tests/ -v
-
-# With Docker Compose services running
-docker compose -f docker/docker-compose.yml up -d postgres redis
-pytest tests/ -v
+# Full suite including integration tests (requires Docker Compose network)
+docker compose -f docker/docker-compose.yml run --rm app pytest tests/ -v
 ```
 
-80 unit tests pass. 45 integration tests skip automatically when services are not reachable.
+Integration tests connect to `postgres` and `redis` by Docker service name and must run
+inside the Compose network. Running `pytest tests/integration/` outside Docker will fail
+with a connection error.
 
 ---
 
