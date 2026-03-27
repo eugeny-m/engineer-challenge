@@ -79,12 +79,12 @@ Two related problems in the current config:
 **Files:**
 - Modify: `tests/smoke/test_infrastructure.py`
 
-- [ ] Remove `POSTGRES_HOST`, `POSTGRES_PORT`, `REDIS_HOST`, `REDIS_PORT` variables
-- [ ] Parse PostgreSQL host/port from `DB_URL` env var (fallback: `localhost:5432`)
-- [ ] Parse Redis host/port from `REDIS_URL` env var (fallback: `localhost:6379`)
-- [ ] Use parsed values in `postgres_available` and `redis_available` skip markers
-- [ ] Fix `test_redis_ping`: add fallback `REDIS_URL=redis://localhost:6379/0` (currently crashes if REDIS_URL not set)
-- [ ] Verify skip logic still works: when services are unreachable, tests skip; when reachable, they run
+- [x] Remove `POSTGRES_HOST`, `POSTGRES_PORT`, `REDIS_HOST`, `REDIS_PORT` variables
+- [x] Parse PostgreSQL host/port from `DB_URL` env var (fallback: `localhost:5432`)
+- [x] Parse Redis host/port from `REDIS_URL` env var (fallback: `localhost:6379`)
+- [x] Use parsed values in `postgres_available` and `redis_available` skip markers
+- [x] Fix `test_redis_ping`: add fallback `REDIS_URL=redis://localhost:6379/0` (currently crashes if REDIS_URL not set)
+- [x] Verify skip logic still works: when services are unreachable, tests skip; when reachable, they run
 
 ### Task 6: Fix `test_token_store.py` — use env var for Redis URL
 

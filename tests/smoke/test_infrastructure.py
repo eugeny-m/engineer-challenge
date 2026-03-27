@@ -8,6 +8,7 @@ These tests are skipped automatically when the services are not available.
 """
 import os
 import socket
+from urllib.parse import urlparse
 
 import pytest
 
@@ -20,10 +21,15 @@ def _is_port_open(host: str, port: int, timeout: float = 1.0) -> bool:
         return False
 
 
-POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "localhost")
-POSTGRES_PORT = int(os.environ.get("POSTGRES_PORT", "5432"))
-REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
+_db_url = os.environ.get("DB_URL", "postgresql+asyncpg://localhost:5432/auth")
+_parsed_pg = urlparse(_db_url)
+POSTGRES_HOST = _parsed_pg.hostname or "localhost"
+POSTGRES_PORT = _parsed_pg.port or 5432
+
+_redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+_parsed_redis = urlparse(_redis_url)
+REDIS_HOST = _parsed_redis.hostname or "localhost"
+REDIS_PORT = _parsed_redis.port or 6379
 
 postgres_available = pytest.mark.skipif(
     not _is_port_open(POSTGRES_HOST, POSTGRES_PORT),
@@ -66,7 +72,7 @@ async def test_redis_ping():
     """Verify Redis is reachable and responds to PING."""
     import redis.asyncio as aioredis
 
-    redis_url = os.environ.get("REDIS_URL", f"redis://{REDIS_HOST}:{REDIS_PORT}/0")
+    redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
     client = aioredis.from_url(redis_url)
     try:
         result = await client.ping()
