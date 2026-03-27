@@ -51,9 +51,10 @@ so the database schema is always up to date.
 | ACCESS_TOKEN_EXPIRE_MINUTES | 15 | Access JWT lifetime |
 | REFRESH_TOKEN_EXPIRE_DAYS | 30 | Refresh token lifetime |
 | RESET_TOKEN_EXPIRE_MINUTES | 15 | Password-reset token lifetime |
-| ENV | production | Set to `development` for console logs |
+| LOG_FORMAT | json | Log format: `json` for production, `console` for human-readable dev output |
 | DB_TEST_URL | (postgres service default) | asyncpg URL for the `auth_test` database; used by integration tests |
-| REDIS_TEST_URL | (redis service default) | Redis URL for integration tests (DB index 2) |
+| REDIS_TEST_URL | (redis service default) | Redis URL for GraphQL integration tests (DB index 2) |
+| REDIS_TOKEN_TEST_URL | (redis service default) | Redis URL for token store integration tests (DB index 1) |
 
 ### Run tests
 

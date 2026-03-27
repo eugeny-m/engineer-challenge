@@ -36,7 +36,7 @@ docker compose -f docker/docker-compose.yml run --rm app pytest tests/ -v
 | Scope | PostgreSQL DB | Redis DB |
 |---|---|---|
 | App (runtime) | `auth` | DB 0 |
-| Repository integration tests | `auth_test` | DB 1 |
+| Repository integration tests | `auth_test` | — |
 | Token store integration tests | — | DB 1 |
 | GraphQL integration tests | `auth_test` | DB 2 |
 
@@ -52,7 +52,7 @@ URLs with Docker service names (`postgres`, `redis`). `.env` is for local dev (l
 - Refresh tokens: opaque UUIDs stored in Redis under `refresh:{token}` key
 - Sessions keyed as `session:{session_id}` hash in Redis; tracked per-user in `sessions:{user_id}` set
 - Rate limiting via SlowAPI with Redis backend; email-keyed limits on `login` and `requestPasswordReset`
-- Structured logging via structlog; JSON in production (`ENV=production`), console in dev
+- Structured logging via structlog; JSON in production (`LOG_FORMAT=json`), console in dev (`LOG_FORMAT=console`)
 
 ## Build / migration commands
 

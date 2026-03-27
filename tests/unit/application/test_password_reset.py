@@ -112,9 +112,9 @@ async def test_request_password_reset_replaces_previous_token():
 
     # Only one token should remain
     assert len(token_repo.tokens) == 1
-    # The remaining token should be the second one
-    remaining = list(token_repo.tokens.values())[0]
-    assert remaining.token.value != first_token_value
+    # The remaining token should be the new (second) one, not the first
+    second_token_value = email_svc.sent_emails[1][1]
+    assert second_token_value != first_token_value
 
 
 # ---- ResetPassword tests ----
