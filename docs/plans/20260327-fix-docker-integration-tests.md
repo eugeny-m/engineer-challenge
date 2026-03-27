@@ -48,9 +48,9 @@ Stop any further execution and exit if they are not.
 **Files:**
 - Modify: `tests/integration/test_repositories.py`
 
-- [ ] Change `_TEST_DB_URL` default from `localhost:5432` to `postgres:5432`
-- [ ] Remove dead code `return False` after `raise` in `_check_db_available()` (unreachable line)
-- [ ] Run unit tests to confirm no regressions: `pytest tests/unit/ -q`
+- [x] Change `_TEST_DB_URL` default from `localhost:5432` to `postgres:5432`
+- [x] Remove dead code `return False` after `raise` in `_check_db_available()` (unreachable line)
+- [x] Run unit tests to confirm no regressions: `pytest tests/unit/ -q`
 
 ### Task 2: Fix `test_graphql.py`
 

@@ -20,7 +20,7 @@ from auth_service.infrastructure.db.repositories.user_repository import SqlUserR
 
 _TEST_DB_URL = os.environ.get(
     "DB_TEST_URL",
-    "postgresql+asyncpg://auth_user:auth_password@localhost:5432/auth_test",
+    "postgresql+asyncpg://auth_user:auth_password@postgres:5432/auth_test",
 )
 
 pytestmark = pytest.mark.integration
@@ -31,12 +31,12 @@ def _check_db_available() -> bool:
     import socket
 
     try:
-        host = "localhost"
+        host = "postgres"
         port = 5432
         with socket.create_connection((host, port), timeout=1):
             return True
     except OSError:
-        return False
+        raise
 
 
 _db_available = _check_db_available()
@@ -149,6 +149,7 @@ class TestSqlUserRepository:
 # ---------------------------------------------------------------------------
 
 @skip_no_db
+@pytest.mark.asyncio
 class TestSqlResetTokenRepository:
     async def test_save_and_find_by_token(self, session):
         user_repo = SqlUserRepository(session)
