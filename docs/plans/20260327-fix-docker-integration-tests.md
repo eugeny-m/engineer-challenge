@@ -57,11 +57,11 @@ Stop any further execution and exit if they are not.
 **Files:**
 - Modify: `tests/integration/test_graphql.py`
 
-- [ ] Change `_TEST_DB_URL` default from `localhost:5432` to `postgres:5432`
-- [ ] Change `_REDIS_URL` default from `localhost:6379/2` to `redis:6379/2`
-- [ ] Change `_port_open("localhost", 5432)` to `_port_open("postgres", 5432)`
-- [ ] Change `_port_open("localhost", 6379)` to `_port_open("redis", 6379)`
-- [ ] Run unit tests to confirm no regressions: `pytest tests/unit/ -q`
+- [x] Change `_TEST_DB_URL` default from `localhost:5432` to `postgres:5432`
+- [x] Change `_REDIS_URL` default from `localhost:6379/2` to `redis:6379/2`
+- [x] Change `_port_open("localhost", 5432)` to `_port_open("postgres", 5432)`
+- [x] Change `_port_open("localhost", 6379)` to `_port_open("redis", 6379)`
+- [x] Run unit tests to confirm no regressions: `pytest tests/unit/ -q`
 
 ### Task 3: Add `DB_TEST_URL` to docker-compose.yml
 

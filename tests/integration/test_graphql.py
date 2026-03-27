@@ -24,9 +24,9 @@ pytestmark = pytest.mark.integration
 
 _TEST_DB_URL = os.environ.get(
     "DB_TEST_URL",
-    "postgresql+asyncpg://auth_user:auth_password@localhost:5432/auth_test",
+    "postgresql+asyncpg://auth_user:auth_password@postgres:5432/auth_test",
 )
-_REDIS_URL = os.environ.get("REDIS_TEST_URL", "redis://localhost:6379/2")
+_REDIS_URL = os.environ.get("REDIS_TEST_URL", "redis://redis:6379/2")
 
 
 def _port_open(host: str, port: int) -> bool:
@@ -37,8 +37,8 @@ def _port_open(host: str, port: int) -> bool:
         return False
 
 
-_db_available = _port_open("localhost", 5432)
-_redis_available = _port_open("localhost", 6379)
+_db_available = _port_open("postgres", 5432)
+_redis_available = _port_open("redis", 6379)
 _services_available = _db_available and _redis_available
 
 skip_no_services = pytest.mark.skipif(
