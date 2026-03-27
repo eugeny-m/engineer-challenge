@@ -59,9 +59,9 @@ Two related problems in the current config:
 **Files:**
 - Modify: `docker/docker-compose.yml`
 
-- [ ] Change `env_file` in `app` service from `../.env` to `../.env.docker`
-- [ ] Remove the entire `environment:` block from `app` service (vars are now in `.env.docker`)
-- [ ] Verify `volumes:` block is unchanged (keep the `pyproject.toml` mount)
+- [x] Change `env_file` in `app` service from `../.env` to `../.env.docker`
+- [x] Remove the entire `environment:` block from `app` service (vars are now in `.env.docker`)
+- [x] Verify `volumes:` block is unchanged (keep the `pyproject.toml` mount)
 
 ### Task 4: Update `.env.example`
 
