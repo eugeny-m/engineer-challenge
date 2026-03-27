@@ -40,8 +40,9 @@ docker compose -f docker/docker-compose.yml run --rm app pytest tests/ -v
 | Token store integration tests | — | DB 1 |
 | GraphQL integration tests | `auth_test` | DB 2 |
 
-`DB_TEST_URL` and `REDIS_TEST_URL` env vars are injected by docker-compose.yml `environment`
-block to guarantee they override any absent `.env` values.
+`.env.docker` is the env_file used by docker-compose.yml for the `app` service; it sets all
+URLs with Docker service names (`postgres`, `redis`). `.env` is for local dev (localhost URLs).
+`REDIS_TOKEN_TEST_URL` (DB1) is used by token store integration tests.
 
 ## Key conventions
 
