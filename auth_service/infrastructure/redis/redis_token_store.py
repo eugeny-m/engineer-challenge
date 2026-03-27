@@ -112,8 +112,9 @@ class RedisTokenStore(TokenStore):
         now_iso = datetime.now(tz=timezone.utc).isoformat()
 
         async with self._redis.pipeline(transaction=True) as pipe:
-            # Note: old_refresh_token was already atomically deleted by GETDEL in
-            # get_session_by_refresh_token; no need to delete it again here.
+            # Delete old refresh token (may already be deleted by GETDEL in
+            # get_session_by_refresh_token, but deleting a non-existent key is a no-op)
+            pipe.delete(self._refresh_key(old_refresh_token))
             # Remove old access jti
             if old_jti:
                 pipe.delete(self._access_key(old_jti))

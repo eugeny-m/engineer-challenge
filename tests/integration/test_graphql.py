@@ -9,12 +9,15 @@ from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio
+from fastapi import FastAPI, Request
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 import redis.asyncio as aioredis
 
+from auth_service.container import GlobalContainer, set_global_container
 from auth_service.infrastructure.db.models import Base
+from auth_service.presentation.graphql.schema import create_graphql_router
 
 pytestmark = pytest.mark.integration
 
@@ -82,21 +85,17 @@ async def test_session_factory(test_engine):
 @pytest_asyncio.fixture
 async def test_client(test_session_factory, redis_client):
     """Create a test FastAPI app wired to test DB + Redis."""
-    from fastapi import FastAPI, Request
-    from auth_service.container import GlobalContainer, set_global_container
-    from auth_service.presentation.graphql.schema import create_graphql_router
-
     async def get_context(request: Request) -> AsyncGenerator[dict, None]:
         async with container.request_scope() as scope:
             yield {"request": request, "container": scope}
+
+    # Set JWT secret before creating container (container reads it in __init__)
+    os.environ.setdefault("JWT_SECRET", "test-secret-key")
 
     container = GlobalContainer(
         redis_client=redis_client,
         session_factory=test_session_factory,
     )
-    # Override JWT secret for predictable tests
-    import os
-    os.environ.setdefault("JWT_SECRET", "test-secret-key")
 
     app = FastAPI()
     graphql_router = create_graphql_router(get_context)
@@ -218,7 +217,7 @@ class TestRegister:
         )
         data = resp.json()["data"]["register"]
         assert data["success"] is False
-        assert "already exists" in data["message"].lower()
+        assert "could not be completed" in data["message"].lower()
 
     async def test_register_weak_password(self, test_client):
         client, _ = test_client

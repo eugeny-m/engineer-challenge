@@ -73,8 +73,8 @@ Stop any further execution and exit if they are not.
 
 ### Task 4: Verify acceptance criteria
 
-- [ ] Confirm all integration tests pass (no skips due to unavailable services)
-- [ ] Run full suite to confirm no regressions
+- [x] Confirm all integration tests pass (no skips due to unavailable services)
+- [x] Run full suite to confirm no regressions
 
 ### Task 5: [Final] Update documentation
 

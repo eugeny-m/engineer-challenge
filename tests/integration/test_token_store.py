@@ -6,7 +6,7 @@ import redis.asyncio as aioredis
 
 from auth_service.infrastructure.redis.redis_token_store import RedisTokenStore
 
-REDIS_URL = "redis://localhost:6379/1"  # use DB 1 to avoid polluting default DB
+REDIS_URL = "redis://redis:6379/1"  # use DB 1 to avoid polluting default DB
 
 pytestmark = pytest.mark.integration
 
@@ -172,6 +172,7 @@ async def test_revoke_session_jti_no_longer_valid(store):
     assert await store.is_access_jti_valid(jti) is False
 
 
+@pytest.mark.asyncio
 async def test_revoke_session_refresh_gone(store):
     user_id, session_id = _make_ids()
     jti = str(uuid.uuid4())
@@ -179,14 +180,14 @@ async def test_revoke_session_refresh_gone(store):
     await store.revoke_session(session_id)
     assert await store.get_session_by_refresh_token("rt-revoke2") is None
 
-
+@pytest.mark.asyncio
 async def test_revoke_session_metadata_gone(store):
     user_id, session_id = _make_ids()
     await _create(store, user_id, session_id, str(uuid.uuid4()), "rt-meta")
     await store.revoke_session(session_id)
     assert await store.get_session(session_id) is None
 
-
+@pytest.mark.asyncio
 async def test_revoke_session_idempotent(store):
     user_id, session_id = _make_ids()
     await _create(store, user_id, session_id, str(uuid.uuid4()), "rt-idem")
@@ -199,6 +200,7 @@ async def test_revoke_session_idempotent(store):
 # revoke_all_user_sessions
 # ---------------------------------------------------------------------------
 
+@pytest.mark.asyncio
 async def test_revoke_all_user_sessions(store):
     user_id = uuid.uuid4()
     session_ids = [uuid.uuid4() for _ in range(3)]
@@ -215,5 +217,6 @@ async def test_revoke_all_user_sessions(store):
         assert await store.get_session_by_refresh_token(rt) is None
 
 
+@pytest.mark.asyncio
 async def test_revoke_all_user_sessions_no_sessions_does_not_raise(store):
     await store.revoke_all_user_sessions(uuid.uuid4())
