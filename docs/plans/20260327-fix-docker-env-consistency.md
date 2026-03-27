@@ -91,9 +91,9 @@ Two related problems in the current config:
 **Files:**
 - Modify: `tests/integration/test_token_store.py`
 
-- [ ] Replace hardcoded `REDIS_URL = "redis://redis:6379/1"` with `os.environ.get("REDIS_TOKEN_TEST_URL", "redis://localhost:6379/1")`
-- [ ] Add `import os` if not present
-- [ ] Rename variable to avoid confusion with the app-level `REDIS_URL`
+- [x] Replace hardcoded `REDIS_URL = "redis://redis:6379/1"` with `os.environ.get("REDIS_TOKEN_TEST_URL", "redis://localhost:6379/1")`
+- [x] Add `import os` if not present
+- [x] Rename variable to avoid confusion with the app-level `REDIS_URL`
 
 ### Task 7: Verify acceptance criteria
 

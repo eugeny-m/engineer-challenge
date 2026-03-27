@@ -1,4 +1,5 @@
 """Integration tests for RedisTokenStore against a real Redis instance."""
+import os
 import uuid
 import pytest
 import pytest_asyncio
@@ -6,14 +7,14 @@ import redis.asyncio as aioredis
 
 from auth_service.infrastructure.redis.redis_token_store import RedisTokenStore
 
-REDIS_URL = "redis://redis:6379/1"  # use DB 1 to avoid polluting default DB
+REDIS_TOKEN_TEST_URL = os.environ.get("REDIS_TOKEN_TEST_URL", "redis://localhost:6379/1")
 
 pytestmark = pytest.mark.integration
 
 
 @pytest_asyncio.fixture
 async def redis_client():
-    client = aioredis.from_url(REDIS_URL, decode_responses=False)
+    client = aioredis.from_url(REDIS_TOKEN_TEST_URL, decode_responses=False)
     # Verify connectivity; skip entire module if Redis is unavailable
     try:
         await client.ping()
