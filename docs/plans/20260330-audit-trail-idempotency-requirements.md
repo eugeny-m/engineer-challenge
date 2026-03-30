@@ -92,11 +92,11 @@ These features are independent and should be implemented as two separate PRs in 
 **Files:**
 - Create: `infrastructure/db/repositories/audit_log_repository.py`
 
-- [ ] implement `AuditLogRepository(AuditLogPort)` in `infrastructure/db/repositories/audit_log_repository.py` using async SQLAlchemy session
-- [ ] `record()` maps `AuditEventDTO` → `AuthEventModel`, calls `session.add()` + `session.flush()`
-- [ ] write unit tests for `AuditLogRepository.record()` with mocked session (assert `add` called with correct model fields)
-- [ ] write integration test: call `repository.record(dto)`, query DB, assert row persisted with correct data
-- [ ] run tests — must pass before Task 4
+- [x] implement `AuditLogRepository(AuditLogPort)` in `infrastructure/db/repositories/audit_log_repository.py` using async SQLAlchemy session
+- [x] `record()` maps `AuditEventDTO` → `AuthEventModel`, calls `session.add()` + `session.flush()`
+- [x] write unit tests for `AuditLogRepository.record()` with mocked session (assert `add` called with correct model fields)
+- [x] write integration test: call `repository.record(dto)`, query DB, assert row persisted with correct data
+- [x] run tests — must pass before Task 4
 
 ---
 

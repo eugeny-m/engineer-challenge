@@ -15,7 +15,10 @@ from auth_service.domain.entities.user import User
 from auth_service.domain.value_objects.email import Email
 from auth_service.domain.value_objects.hashed_password import HashedPassword
 from auth_service.domain.value_objects.reset_token import ResetToken
-from auth_service.infrastructure.db.models import Base
+from auth_service.application.dto import AuditEventDTO
+from auth_service.domain.value_objects.auth_event_type import AuthEventType
+from auth_service.infrastructure.db.models import AuthEventModel, Base
+from auth_service.infrastructure.db.repositories.audit_log_repository import AuditLogRepository
 from auth_service.infrastructure.db.repositories.reset_token_repository import SqlResetTokenRepository
 from auth_service.infrastructure.db.repositories.user_repository import SqlUserRepository
 
@@ -218,3 +221,78 @@ class TestSqlResetTokenRepository:
 
         # Should not raise even when no tokens exist
         await token_repo.delete_all_by_user_id(user.id)
+
+
+# ---------------------------------------------------------------------------
+# AuditLogRepository tests
+# ---------------------------------------------------------------------------
+
+
+def make_audit_dto(user_id: uuid.UUID | None = None, **overrides) -> AuditEventDTO:
+    defaults = dict(
+        id=uuid.uuid4(),
+        event_type=AuthEventType.LOGIN_SUCCESS,
+        occurred_at=datetime.now(timezone.utc),
+        user_id=user_id,
+        session_id=uuid.uuid4(),
+        ip_address="10.0.0.1",
+        metadata={"device_info": "Firefox"},
+    )
+    defaults.update(overrides)
+    return AuditEventDTO(**defaults)
+
+
+@skip_no_db
+class TestAuditLogRepository:
+    async def test_record_persists_row(self, session):
+        from sqlalchemy import select
+
+        repo = AuditLogRepository(session)
+        dto = make_audit_dto()
+        await repo.record(dto)
+
+        result = await session.execute(select(AuthEventModel).where(AuthEventModel.id == dto.id))
+        row = result.scalar_one_or_none()
+        assert row is not None
+        assert row.id == dto.id
+        assert row.event_type == dto.event_type.value
+        assert row.occurred_at == dto.occurred_at
+
+    async def test_record_all_fields_round_trip(self, session):
+        from sqlalchemy import select
+
+        user_repo = SqlUserRepository(session)
+        user = make_user("audit-user@example.com")
+        await user_repo.save(user)
+
+        repo = AuditLogRepository(session)
+        dto = make_audit_dto(
+            user_id=user.id,
+            event_type=AuthEventType.LOGOUT,
+            ip_address="172.16.0.5",
+            metadata={"reason": "user_logout"},
+        )
+        await repo.record(dto)
+
+        result = await session.execute(select(AuthEventModel).where(AuthEventModel.id == dto.id))
+        row = result.scalar_one_or_none()
+        assert row is not None
+        assert row.user_id == user.id
+        assert row.event_type == "logout"
+        assert row.session_id == dto.session_id
+        assert row.ip_address == "172.16.0.5"
+        assert row.metadata_ == {"reason": "user_logout"}
+
+    async def test_record_nullable_fields(self, session):
+        from sqlalchemy import select
+
+        repo = AuditLogRepository(session)
+        dto = make_audit_dto(user_id=None, session_id=None, ip_address=None)
+        await repo.record(dto)
+
+        result = await session.execute(select(AuthEventModel).where(AuthEventModel.id == dto.id))
+        row = result.scalar_one_or_none()
+        assert row is not None
+        assert row.user_id is None
+        assert row.session_id is None
+        assert row.ip_address is None
