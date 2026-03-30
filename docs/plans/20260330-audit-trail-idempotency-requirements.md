@@ -152,14 +152,14 @@ These features are independent and should be implemented as two separate PRs in 
 - Modify: `application/command_handlers/request_password_reset.py`
 - Modify: `application/command_handlers/reset_password.py`
 
-- [ ] `LogoutCommandHandler`: inject `AuditLogPort`; record `logout` with `reason: "user_logout"` on success, wrapped in try/except
-- [ ] `RevokeSessionCommandHandler`: inject `AuditLogPort`; record `session_revoked` with `reason: "password_reset"` (or appropriate reason) on success, wrapped in try/except
-- [ ] `RefreshTokenCommandHandler`: inject `AuditLogPort`; record `token_refreshed` (empty metadata) on success, wrapped in try/except
-- [ ] `RequestPasswordResetCommandHandler`: inject `AuditLogPort`; record `password_reset_requested` (empty metadata — no email for PII minimisation) on success, wrapped in try/except
-- [ ] `ResetPasswordCommandHandler`: inject `AuditLogPort`; record `password_reset_completed` (empty metadata) on success, wrapped in try/except
-- [ ] write unit tests for each handler: verify `audit_log.record()` called with correct event type and metadata
-- [ ] write unit test for each handler: verify audit log failure does NOT propagate
-- [ ] run tests — must pass before Task 8
+- [x] `LogoutCommandHandler`: inject `AuditLogPort`; record `logout` with `reason: "user_logout"` on success, wrapped in try/except
+- [x] `RevokeSessionCommandHandler`: inject `AuditLogPort`; record `session_revoked` with `reason: "password_reset"` (or appropriate reason) on success, wrapped in try/except
+- [x] `RefreshTokenCommandHandler`: inject `AuditLogPort`; record `token_refreshed` (empty metadata) on success, wrapped in try/except
+- [x] `RequestPasswordResetCommandHandler`: inject `AuditLogPort`; record `password_reset_requested` (empty metadata — no email for PII minimisation) on success, wrapped in try/except
+- [x] `ResetPasswordCommandHandler`: inject `AuditLogPort`; record `password_reset_completed` (empty metadata) on success, wrapped in try/except
+- [x] write unit tests for each handler: verify `audit_log.record()` called with correct event type and metadata
+- [x] write unit test for each handler: verify audit log failure does NOT propagate
+- [x] run tests — must pass before Task 8
 
 ---
 

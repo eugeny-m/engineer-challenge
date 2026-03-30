@@ -73,16 +73,19 @@ class RequestScope:
         self.refresh_token_handler = RefreshTokenHandler(
             token_service=global_container.token_service,
             token_store=global_container.token_store,
+            audit_log=self.audit_log,
             access_ttl=global_container.access_token_ttl_seconds,
             refresh_ttl=global_container.refresh_token_ttl_seconds,
         )
         self.revoke_session_handler = RevokeSessionHandler(
             token_store=global_container.token_store,
+            audit_log=self.audit_log,
         )
         self.request_password_reset_handler = RequestPasswordResetHandler(
             user_repo=self.user_repo,
             reset_token_repo=self._reset_token_repo,
             email_service=global_container.email_service,
+            audit_log=self.audit_log,
             expire_minutes=global_container.reset_token_expire_minutes,
         )
         self.reset_password_handler = ResetPasswordHandler(
@@ -90,6 +93,7 @@ class RequestScope:
             reset_token_repo=self._reset_token_repo,
             hasher=global_container.hasher,
             token_store=global_container.token_store,
+            audit_log=self.audit_log,
         )
 
 

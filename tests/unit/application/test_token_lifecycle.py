@@ -16,6 +16,7 @@ from auth_service.domain.exceptions import InvalidTokenError
 from auth_service.domain.value_objects.email import Email
 from auth_service.domain.value_objects.hashed_password import HashedPassword
 from tests.unit.application.fakes import (
+    FailingAuditLogPort,
     FakeAuditLogPort,
     FakePasswordHasher,
     FakeTokenService,
@@ -53,7 +54,7 @@ async def test_refresh_token_success():
 
     old_jti = first_pair.access_token.split(":")[-1]
 
-    handler = RefreshTokenHandler(token_svc, token_store)
+    handler = RefreshTokenHandler(token_svc, token_store, FakeAuditLogPort())
     new_pair = await handler.handle(RefreshTokenCommand(refresh_token=first_pair.refresh_token))
 
     assert new_pair.access_token != first_pair.access_token
@@ -68,7 +69,7 @@ async def test_refresh_token_invalid():
     token_svc = FakeTokenService()
     token_store = FakeTokenStore()
 
-    handler = RefreshTokenHandler(token_svc, token_store)
+    handler = RefreshTokenHandler(token_svc, token_store, FakeAuditLogPort())
 
     with pytest.raises(InvalidTokenError):
         await handler.handle(RefreshTokenCommand(refresh_token="invalid-token"))
@@ -87,7 +88,7 @@ async def test_refresh_token_rotation_old_token_rejected():
     first_pair = await login("alice@example.com", "mypassword1", repo, hasher, token_svc, token_store)
     old_refresh = first_pair.refresh_token
 
-    handler = RefreshTokenHandler(token_svc, token_store)
+    handler = RefreshTokenHandler(token_svc, token_store, FakeAuditLogPort())
     await handler.handle(RefreshTokenCommand(refresh_token=old_refresh))
 
     # Old refresh token should now be invalid
@@ -107,7 +108,7 @@ async def test_revoke_session_success():
 
     pair = await login("alice@example.com", "mypassword1", repo, hasher, token_svc, token_store)
 
-    handler = RevokeSessionHandler(token_store)
+    handler = RevokeSessionHandler(token_store, FakeAuditLogPort())
     await handler.handle(RevokeSessionCommand(session_id=pair.session_id))
 
     session = await token_store.get_session(pair.session_id)
@@ -117,7 +118,7 @@ async def test_revoke_session_success():
 @pytest.mark.asyncio
 async def test_revoke_session_already_revoked():
     token_store = FakeTokenStore()
-    handler = RevokeSessionHandler(token_store)
+    handler = RevokeSessionHandler(token_store, FakeAuditLogPort())
 
     # Revoking a non-existent session should not raise
     await handler.handle(RevokeSessionCommand(session_id=uuid.uuid4()))

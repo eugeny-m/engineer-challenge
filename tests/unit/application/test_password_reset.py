@@ -20,6 +20,8 @@ from auth_service.domain.value_objects.email import Email
 from auth_service.domain.value_objects.hashed_password import HashedPassword
 from auth_service.domain.value_objects.reset_token import ResetToken
 from tests.unit.application.fakes import (
+    FailingAuditLogPort,
+    FakeAuditLogPort,
     FakeEmailService,
     FakePasswordHasher,
     FakeResetTokenRepository,
@@ -74,7 +76,7 @@ async def test_request_password_reset_success():
     token_repo = FakeResetTokenRepository()
     email_svc = FakeEmailService()
 
-    handler = RequestPasswordResetHandler(repo, token_repo, email_svc)
+    handler = RequestPasswordResetHandler(repo, token_repo, email_svc, FakeAuditLogPort())
     await handler.handle(RequestPasswordResetCommand(email="alice@example.com"))
 
     assert len(token_repo.tokens) == 1
@@ -89,7 +91,7 @@ async def test_request_password_reset_unknown_email():
     token_repo = FakeResetTokenRepository()
     email_svc = FakeEmailService()
 
-    handler = RequestPasswordResetHandler(repo, token_repo, email_svc)
+    handler = RequestPasswordResetHandler(repo, token_repo, email_svc, FakeAuditLogPort())
     await handler.handle(RequestPasswordResetCommand(email="nobody@example.com"))
 
     assert len(email_svc.sent_emails) == 0
@@ -105,7 +107,7 @@ async def test_request_password_reset_replaces_previous_token():
     token_repo = FakeResetTokenRepository()
     email_svc = FakeEmailService()
 
-    handler = RequestPasswordResetHandler(repo, token_repo, email_svc)
+    handler = RequestPasswordResetHandler(repo, token_repo, email_svc, FakeAuditLogPort())
 
     await handler.handle(RequestPasswordResetCommand(email="alice@example.com"))
     first_token_value = email_svc.sent_emails[0][1]
@@ -137,7 +139,7 @@ async def test_reset_password_success():
     hasher = FakePasswordHasher()
     token_store = FakeTokenStore()
 
-    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store)
+    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store, FakeAuditLogPort())
     await handler.handle(ResetPasswordCommand(token="valid-token-value", new_password="newpass1"))
 
     # Password should be updated
@@ -162,7 +164,7 @@ async def test_reset_password_expired_token():
     hasher = FakePasswordHasher()
     token_store = FakeTokenStore()
 
-    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store)
+    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store, FakeAuditLogPort())
 
     with pytest.raises(TokenExpiredError):
         await handler.handle(ResetPasswordCommand(token="expired-token-value", new_password="newpass1"))
@@ -175,7 +177,7 @@ async def test_reset_password_token_not_found():
     hasher = FakePasswordHasher()
     token_store = FakeTokenStore()
 
-    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store)
+    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store, FakeAuditLogPort())
 
     with pytest.raises(TokenNotFoundError):
         await handler.handle(ResetPasswordCommand(token="nonexistent", new_password="newpass1"))
@@ -200,7 +202,7 @@ async def test_reset_password_revokes_all_sessions():
     token_store.sessions[session_id] = {"user_id": user.id, "jti": "somejti", "refresh": "somerefresh"}
     token_store.user_sessions.setdefault(user.id, set()).add(session_id)
 
-    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store)
+    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store, FakeAuditLogPort())
     await handler.handle(ResetPasswordCommand(token="valid-token-value", new_password="newpass1"))
 
     # All sessions should be revoked
@@ -221,7 +223,7 @@ async def test_reset_password_user_not_found():
     hasher = FakePasswordHasher()
     token_store = FakeTokenStore()
 
-    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store)
+    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store, FakeAuditLogPort())
 
     with pytest.raises(UserNotFoundError):
         await handler.handle(ResetPasswordCommand(token="valid-token-value", new_password="newpass1"))
@@ -246,7 +248,7 @@ async def test_reset_password_already_used_token():
     hasher = FakePasswordHasher()
     token_store = FakeTokenStore()
 
-    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store)
+    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store, FakeAuditLogPort())
 
     with pytest.raises(TokenAlreadyUsedError):
         await handler.handle(ResetPasswordCommand(token="used-token-value", new_password="newpass1"))
@@ -265,7 +267,7 @@ async def test_reset_password_weak_new_password():
     hasher = FakePasswordHasher()
     token_store = FakeTokenStore()
 
-    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store)
+    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store, FakeAuditLogPort())
 
     with pytest.raises(WeakPasswordError):
         await handler.handle(ResetPasswordCommand(token="valid-token-value", new_password="short"))
