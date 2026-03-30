@@ -16,6 +16,7 @@ from auth_service.domain.exceptions import InvalidTokenError
 from auth_service.domain.value_objects.email import Email
 from auth_service.domain.value_objects.hashed_password import HashedPassword
 from tests.unit.application.fakes import (
+    FakeAuditLogPort,
     FakePasswordHasher,
     FakeTokenService,
     FakeTokenStore,
@@ -34,7 +35,7 @@ def make_user(email: str, password: str) -> User:
 
 
 async def login(email: str, password: str, repo, hasher, token_svc, token_store):
-    handler = AuthenticateUserHandler(repo, hasher, token_svc, token_store)
+    handler = AuthenticateUserHandler(repo, hasher, token_svc, token_store, FakeAuditLogPort())
     return await handler.handle(AuthenticateUserCommand(email=email, password=password))
 
 

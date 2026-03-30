@@ -131,15 +131,15 @@ These features are independent and should be implemented as two separate PRs in 
 **Files:**
 - Modify: `application/command_handlers/authenticate_user.py` (or equivalent)
 
-- [ ] inject `AuditLogPort` via constructor in `AuthenticateUserCommandHandler`
-- [ ] on success path: after session created, call `await self._audit_log.record(AuditEventDTO(event_type=AuthEventType.LOGIN_SUCCESS, user_id=..., session_id=..., ip_address=..., metadata={...}))` wrapped in `try/except Exception`
-- [ ] on `login_failed` path (invalid password): catch domain exception, record `login_failed` event with `reason: "invalid_password"` and `user_id` set, re-raise
-- [ ] on `login_failed` path (user not found): record `login_failed` event with `reason: "user_not_found"` and `user_id=None`, re-raise
-- [ ] on `login_failed` path (inactive account): record `login_failed` with `reason: "inactive_account"`, re-raise
-- [ ] write unit test: verify `audit_log.record()` called with `LOGIN_SUCCESS` on success (mock `AuditLogPort`)
-- [ ] write unit test: verify `audit_log.record()` called with `LOGIN_FAILED` + correct reason metadata for each failure case
-- [ ] write unit test: verify audit log failure (mock raises) does NOT propagate — main operation result still returned
-- [ ] run tests — must pass before Task 7
+- [x] inject `AuditLogPort` via constructor in `AuthenticateUserCommandHandler`
+- [x] on success path: after session created, call `await self._audit_log.record(AuditEventDTO(event_type=AuthEventType.LOGIN_SUCCESS, user_id=..., session_id=..., ip_address=..., metadata={...}))` wrapped in `try/except Exception`
+- [x] on `login_failed` path (invalid password): catch domain exception, record `login_failed` event with `reason: "invalid_password"` and `user_id` set, re-raise
+- [x] on `login_failed` path (user not found): record `login_failed` event with `reason: "user_not_found"` and `user_id=None`, re-raise
+- [x] on `login_failed` path (inactive account): record `login_failed` with `reason: "inactive_account"`, re-raise
+- [x] write unit test: verify `audit_log.record()` called with `LOGIN_SUCCESS` on success (mock `AuditLogPort`)
+- [x] write unit test: verify `audit_log.record()` called with `LOGIN_FAILED` + correct reason metadata for each failure case
+- [x] write unit test: verify audit log failure (mock raises) does NOT propagate — main operation result still returned
+- [x] run tests — must pass before Task 7
 
 ---
 

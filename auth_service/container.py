@@ -66,6 +66,7 @@ class RequestScope:
             hasher=global_container.hasher,
             token_service=global_container.token_service,
             token_store=global_container.token_store,
+            audit_log=self.audit_log,
             access_ttl=global_container.access_token_ttl_seconds,
             refresh_ttl=global_container.refresh_token_ttl_seconds,
         )

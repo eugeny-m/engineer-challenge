@@ -3,6 +3,8 @@ import uuid
 from typing import Any
 from uuid import UUID
 
+from auth_service.application.dto import AuditEventDTO
+from auth_service.application.ports.audit_log import AuditLogPort
 from auth_service.application.ports.email_service import EmailService
 from auth_service.application.ports.password_hasher import PasswordHasher
 from auth_service.application.ports.token_service import TokenService
@@ -183,3 +185,18 @@ class FakeEmailService(EmailService):
 
     async def send_reset_email(self, to_email: str, reset_token: str) -> None:
         self.sent_emails.append((to_email, reset_token))
+
+
+class FakeAuditLogPort(AuditLogPort):
+    def __init__(self):
+        self.recorded: list[AuditEventDTO] = []
+
+    async def record(self, event: AuditEventDTO) -> None:
+        self.recorded.append(event)
+
+
+class FailingAuditLogPort(AuditLogPort):
+    """Always raises — used to verify audit failures don't propagate."""
+
+    async def record(self, event: AuditEventDTO) -> None:
+        raise RuntimeError("audit log unavailable")
