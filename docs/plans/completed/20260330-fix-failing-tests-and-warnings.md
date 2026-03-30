@@ -138,7 +138,7 @@ HS256: `_SECRET` (30 bytes) and the inline `"wrong-secret"` (12 bytes).
 
 ### Task 6: [Final] Clean up
 
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Move this plan to `docs/plans/completed/`
 
 ## Technical Details
 
