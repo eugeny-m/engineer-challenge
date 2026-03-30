@@ -9,6 +9,7 @@ from auth_service.application.ports.token_service import TokenService
 from auth_service.application.ports.token_store import TokenStore
 from auth_service.domain.entities.password_reset_token import PasswordResetToken
 from auth_service.domain.entities.user import User
+from auth_service.domain.exceptions import InvalidTokenError
 from auth_service.domain.repositories.reset_token_repository import ResetTokenRepository
 from auth_service.domain.repositories.user_repository import UserRepository
 from auth_service.domain.value_objects.email import Email
@@ -62,10 +63,10 @@ class FakePasswordHasher(PasswordHasher):
 class FakeTokenService(TokenService):
     """Generates predictable tokens for unit tests."""
 
-    def generate_access_token(self, user_id: UUID, session_id: UUID) -> str:
+    def generate_access_token(self, user_id: UUID, session_id: UUID) -> tuple[str, str]:
         jti = str(uuid.uuid4())
         # Encode a simple "jwt" as "access:{user_id}:{session_id}:{jti}"
-        return f"access:{user_id}:{session_id}:{jti}"
+        return f"access:{user_id}:{session_id}:{jti}", jti
 
     def generate_refresh_token(self) -> str:
         return f"refresh:{uuid.uuid4()}"
@@ -141,18 +142,19 @@ class FakeTokenStore(TokenStore):
         self.refresh_tokens.pop(old_refresh_token, None)
 
         session = self.sessions.get(session_id)
-        if session:
-            old_jti = session.get("jti")
-            if old_jti:
-                self.access_jtis.pop(old_jti, None)
+        if session is None:
+            raise InvalidTokenError("Session not found or expired during rotation")
 
-            session["jti"] = new_access_jti
-            session["refresh"] = new_refresh_token
+        old_jti = session.get("jti")
+        if old_jti:
+            self.access_jtis.pop(old_jti, None)
 
-        user_id = session["user_id"] if session else None
+        session["jti"] = new_access_jti
+        session["refresh"] = new_refresh_token
+
+        user_id = session["user_id"]
         self.access_jtis[new_access_jti] = session_id
-        if user_id is not None:
-            self.refresh_tokens[new_refresh_token] = {"user_id": user_id, "session_id": session_id}
+        self.refresh_tokens[new_refresh_token] = {"user_id": user_id, "session_id": session_id}
 
     async def revoke_session(self, session_id: UUID) -> None:
         session = self.sessions.pop(session_id, None)

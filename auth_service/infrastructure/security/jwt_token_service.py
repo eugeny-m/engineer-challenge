@@ -18,7 +18,7 @@ class JwtTokenService(TokenService):
         self._secret = secret
         self._access_ttl_minutes = access_token_expire_minutes
 
-    def generate_access_token(self, user_id: UUID, session_id: UUID) -> str:
+    def generate_access_token(self, user_id: UUID, session_id: UUID) -> tuple[str, str]:
         now = datetime.now(tz=timezone.utc)
         jti = str(uuid.uuid4())
         payload = {
@@ -35,7 +35,7 @@ class JwtTokenService(TokenService):
             session_id=str(session_id),
             jti=jti,
         )
-        return token
+        return token, jti
 
     def generate_refresh_token(self) -> str:
         return secrets.token_urlsafe(32)

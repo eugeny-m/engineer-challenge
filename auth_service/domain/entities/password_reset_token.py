@@ -14,11 +14,10 @@ class PasswordResetToken:
     expires_at: datetime
     used: bool
 
-    def consume(self) -> "PasswordResetToken":
+    def consume(self) -> None:
         now = datetime.now(timezone.utc)
         if now >= self.expires_at:
             raise TokenExpiredError("Reset token has expired")
         if self.used:
             raise TokenAlreadyUsedError("Reset token has already been used")
         self.used = True
-        return self

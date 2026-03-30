@@ -176,7 +176,7 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
 - [x] implement `AuthenticateUserHandler`: find user → verify password hash → create session_id → generate access JWT (jti, sid=session_id) + refresh token → `TokenStore.create_session(...)` → return `TokenPairDTO`
 - [x] implement `RefreshTokenHandler`: GET refresh:{token} → session_id + user_id → generate new access JWT + new refresh token → `TokenStore.rotate_session(...)` → return `TokenPairDTO`
 - [x] implement `RevokeSessionHandler`: `TokenStore.revoke_session(session_id)` → immediate invalidation
-- [x] implement `RequestPasswordResetHandler`: find user → **raise `UserNotFoundError` if not found** (product decision: show explicit "no such email" error to UX; see trade-off note below) → `repo.delete_all_by_user_id(user_id)` → create new `PasswordResetToken` (expires in N min) → save → send email → return void
+- [x] implement `RequestPasswordResetHandler`: find user → **silently return void if not found** (security decision: prevents email enumeration — callers cannot distinguish registered vs unregistered addresses; original plan proposed raising `UserNotFoundError` but this was changed during implementation in favour of security) → `repo.delete_all_by_user_id(user_id)` → create new `PasswordResetToken` (expires in N min) → save → send email → return void
 - [x] implement `ResetPasswordHandler`: find token → consume token → find user → hash new password → change password → save → `TokenStore.revoke_all_user_sessions(user_id)` (forced re-login after password change)
 - [x] write unit tests for `RegisterUserHandler` (success, duplicate email, weak password) with in-memory fake repos/stores
 - [x] write unit tests for `AuthenticateUserHandler` (success, wrong password, user not found — verify session_id in response)
@@ -184,7 +184,7 @@ sub-millisecond latency, making per-request allowlist checks viable at this scal
 - [x] write unit tests for `RevokeSessionHandler` (success, already revoked)
 - [x] write unit tests for `RequestPasswordResetHandler`:
   - success: token created, email sent
-  - unknown email: raises `UserNotFoundError` (product decision — UX shows "no such email")
+  - unknown email: returns void silently (security decision — prevents email enumeration; no exception raised)
   - second request: previous token deleted (even if not expired), new token created — only one token exists after
 - [x] write unit tests for `ResetPasswordHandler` (success, expired token, all sessions revoked after password change)
 - [x] run tests — must pass before task 6

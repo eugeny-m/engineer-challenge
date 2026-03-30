@@ -20,9 +20,8 @@ def make_token(*, expires_delta: timedelta = timedelta(minutes=15), used: bool =
 
 def test_consume_happy_path():
     token = make_token()
-    result = token.consume()
-    assert result.used is True
-    assert result is token
+    token.consume()
+    assert token.used is True
 
 
 def test_consume_expired():

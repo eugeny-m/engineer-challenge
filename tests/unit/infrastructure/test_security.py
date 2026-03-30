@@ -61,29 +61,34 @@ class TestJwtTokenService:
         self.user_id = uuid.uuid4()
         self.session_id = uuid.uuid4()
 
-    def test_generate_access_token_returns_string(self):
-        token = self.service.generate_access_token(self.user_id, self.session_id)
+    def test_generate_access_token_returns_token_and_jti(self):
+        token, jti = self.service.generate_access_token(self.user_id, self.session_id)
         assert isinstance(token, str)
         assert len(token) > 20
+        assert isinstance(jti, str)
+        assert jti  # non-empty UUID
 
     def test_decode_valid_token_returns_claims(self):
-        token = self.service.generate_access_token(self.user_id, self.session_id)
+        token, _ = self.service.generate_access_token(self.user_id, self.session_id)
         claims = self.service.decode_access_token(token)
         assert claims["sub"] == str(self.user_id)
         assert claims["sid"] == str(self.session_id)
 
     def test_decode_includes_jti(self):
-        token = self.service.generate_access_token(self.user_id, self.session_id)
+        token, jti_from_gen = self.service.generate_access_token(self.user_id, self.session_id)
         claims = self.service.decode_access_token(token)
         jti = claims["jti"]
         assert jti  # non-empty
+        # jti returned by generate must match what's embedded in the token
+        assert jti == jti_from_gen
         # Must be a valid UUID4
         parsed = uuid.UUID(jti)
         assert str(parsed) == jti
 
     def test_jti_is_unique_per_token(self):
-        t1 = self.service.generate_access_token(self.user_id, self.session_id)
-        t2 = self.service.generate_access_token(self.user_id, self.session_id)
+        t1, jti1 = self.service.generate_access_token(self.user_id, self.session_id)
+        t2, jti2 = self.service.generate_access_token(self.user_id, self.session_id)
+        assert jti1 != jti2
         c1 = self.service.decode_access_token(t1)
         c2 = self.service.decode_access_token(t2)
         assert c1["jti"] != c2["jti"]
@@ -91,12 +96,12 @@ class TestJwtTokenService:
     def test_expired_token_raises_token_expired_error(self):
         # Create a service with -1 minute expiry so token is immediately expired
         service = JwtTokenService(secret=_SECRET, access_token_expire_minutes=-1)
-        token = service.generate_access_token(self.user_id, self.session_id)
+        token, _ = service.generate_access_token(self.user_id, self.session_id)
         with pytest.raises(TokenExpiredError):
             service.decode_access_token(token)
 
     def test_tampered_token_raises_invalid_token_error(self):
-        token = self.service.generate_access_token(self.user_id, self.session_id)
+        token, _ = self.service.generate_access_token(self.user_id, self.session_id)
         # Tamper with last character
         tampered = token[:-4] + "XXXX"
         with pytest.raises(InvalidTokenError):
@@ -108,7 +113,7 @@ class TestJwtTokenService:
 
     def test_token_signed_with_wrong_secret_raises_invalid_token_error(self):
         other_service = JwtTokenService(secret="wrong-secret", access_token_expire_minutes=15)
-        token = other_service.generate_access_token(self.user_id, self.session_id)
+        token, _ = other_service.generate_access_token(self.user_id, self.session_id)
         with pytest.raises(InvalidTokenError):
             self.service.decode_access_token(token)
 

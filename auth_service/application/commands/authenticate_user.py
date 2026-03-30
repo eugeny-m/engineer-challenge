@@ -63,12 +63,8 @@ class AuthenticateUserHandler:
                 raise InvalidCredentialsError("Invalid email or password")
 
             session_id = uuid.uuid4()
-            access_token = self._token_service.generate_access_token(user.id, session_id)
+            access_token, jti = self._token_service.generate_access_token(user.id, session_id)
             refresh_token = self._token_service.generate_refresh_token()
-
-            # Extract jti from access token claims
-            claims = self._token_service.decode_access_token(access_token)
-            jti = claims["jti"]
 
             device_info = (command.device_info or "")[:512] or None
 

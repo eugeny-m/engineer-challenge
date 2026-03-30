@@ -1,8 +1,9 @@
 """Rate limiting for the auth service using Redis fixed-window counters.
 
-Rate limiting uses a Redis-backed fixed-window approach integrated with SlowAPI
-(FastAPI-native) for HTTP 429 exception handling infrastructure.  Per-operation
-limits are enforced via RateLimiter using the existing async Redis connection.
+Rate limiting uses a Redis-backed fixed-window approach.  Per-operation limits
+are enforced via RateLimiter using the existing async Redis connection.
+HTTP 429 responses and Retry-After headers are handled by GraphQLRateLimitMiddleware
+in main.py.
 
 Account lockout deliberately NOT implemented.
 Rationale: hard account lockout enables a DoS attack — any attacker who knows a

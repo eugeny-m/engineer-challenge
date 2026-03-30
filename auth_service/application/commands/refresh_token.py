@@ -39,11 +39,8 @@ class RefreshTokenHandler:
             user_id = UUID(session_data["user_id"])
             session_id = UUID(session_data["session_id"])
 
-            new_access_token = self._token_service.generate_access_token(user_id, session_id)
+            new_access_token, new_jti = self._token_service.generate_access_token(user_id, session_id)
             new_refresh_token = self._token_service.generate_refresh_token()
-
-            claims = self._token_service.decode_access_token(new_access_token)
-            new_jti = claims["jti"]
 
             await self._token_store.rotate_session(
                 session_id=session_id,

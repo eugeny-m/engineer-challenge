@@ -10,8 +10,10 @@ from auth_service.application.dto import RequestPasswordResetCommand, ResetPassw
 from auth_service.domain.entities.password_reset_token import PasswordResetToken
 from auth_service.domain.entities.user import User
 from auth_service.domain.exceptions import (
+    TokenAlreadyUsedError,
     TokenExpiredError,
     TokenNotFoundError,
+    UserNotFoundError,
     WeakPasswordError,
 )
 from auth_service.domain.value_objects.email import Email
@@ -115,6 +117,9 @@ async def test_request_password_reset_replaces_previous_token():
     # The remaining token should be the new (second) one, not the first
     second_token_value = email_svc.sent_emails[1][1]
     assert second_token_value != first_token_value
+    # The first token hash must no longer be findable
+    first_token_hash = _tok_hash(first_token_value)
+    assert await token_repo.find_by_token(first_token_hash) is None
 
 
 # ---- ResetPassword tests ----
@@ -201,6 +206,50 @@ async def test_reset_password_revokes_all_sessions():
     # All sessions should be revoked
     session = await token_store.get_session(session_id)
     assert session is None
+
+
+@pytest.mark.asyncio
+async def test_reset_password_user_not_found():
+    # Token is valid but the associated user has been deleted.
+    repo = FakeUserRepository()
+    token_repo = FakeResetTokenRepository()
+
+    orphan_user_id = uuid.uuid4()
+    valid_token = make_valid_token(orphan_user_id)
+    await token_repo.save(valid_token)
+
+    hasher = FakePasswordHasher()
+    token_store = FakeTokenStore()
+
+    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store)
+
+    with pytest.raises(UserNotFoundError):
+        await handler.handle(ResetPasswordCommand(token="valid-token-value", new_password="newpass1"))
+
+
+@pytest.mark.asyncio
+async def test_reset_password_already_used_token():
+    repo = FakeUserRepository()
+    user = make_user("alice@example.com")
+    await repo.save(user)
+
+    token_repo = FakeResetTokenRepository()
+    used_token = PasswordResetToken(
+        id=uuid.uuid4(),
+        user_id=user.id,
+        token=ResetToken(value=_tok_hash("used-token-value")),
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+        used=True,
+    )
+    await token_repo.save(used_token)
+
+    hasher = FakePasswordHasher()
+    token_store = FakeTokenStore()
+
+    handler = ResetPasswordHandler(token_repo, repo, hasher, token_store)
+
+    with pytest.raises(TokenAlreadyUsedError):
+        await handler.handle(ResetPasswordCommand(token="used-token-value", new_password="newpass1"))
 
 
 @pytest.mark.asyncio
