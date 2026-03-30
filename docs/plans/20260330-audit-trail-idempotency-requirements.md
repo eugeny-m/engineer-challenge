@@ -63,11 +63,11 @@ These features are independent and should be implemented as two separate PRs in 
 - Create: `application/ports/audit_log.py`
 - Modify: `application/dto.py`
 
-- [ ] create `AuthEventType` enum in `domain/value_objects/auth_event_type.py` with all 7 event type strings (`login_success`, `login_failed`, `logout`, `session_revoked`, `token_refreshed`, `password_reset_requested`, `password_reset_completed`)
-- [ ] create `AuditEventDTO` dataclass in `application/dto.py` with fields: `id: UUID`, `user_id: UUID | None`, `event_type: AuthEventType`, `session_id: UUID | None`, `ip_address: str | None`, `occurred_at: datetime`, `metadata: dict`
-- [ ] create `AuditLogPort(ABC)` in `application/ports/audit_log.py` with single abstract method `async def record(self, event: AuditEventDTO) -> None`
-- [ ] write unit tests for `AuthEventType` enum (all values present, correct string values)
-- [ ] run tests — must pass before Task 2
+- [x] create `AuthEventType` enum in `domain/value_objects/auth_event_type.py` with all 7 event type strings (`login_success`, `login_failed`, `logout`, `session_revoked`, `token_refreshed`, `password_reset_requested`, `password_reset_completed`)
+- [x] create `AuditEventDTO` dataclass in `application/dto.py` with fields: `id: UUID`, `user_id: UUID | None`, `event_type: AuthEventType`, `session_id: UUID | None`, `ip_address: str | None`, `occurred_at: datetime`, `metadata: dict`
+- [x] create `AuditLogPort(ABC)` in `application/ports/audit_log.py` with single abstract method `async def record(self, event: AuditEventDTO) -> None`
+- [x] write unit tests for `AuthEventType` enum (all values present, correct string values)
+- [x] run tests — must pass before Task 2
 
 ---
 

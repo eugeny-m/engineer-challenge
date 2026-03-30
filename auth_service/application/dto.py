@@ -1,5 +1,8 @@
 from dataclasses import dataclass, field
+from datetime import datetime
 from uuid import UUID
+
+from auth_service.domain.value_objects.auth_event_type import AuthEventType
 
 
 @dataclass(frozen=True)
@@ -34,6 +37,17 @@ class RequestPasswordResetCommand:
 class ResetPasswordCommand:
     token: str
     new_password: str
+
+
+@dataclass(frozen=True)
+class AuditEventDTO:
+    id: UUID
+    event_type: AuthEventType
+    occurred_at: datetime
+    user_id: UUID | None = None
+    session_id: UUID | None = None
+    ip_address: str | None = None
+    metadata: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
