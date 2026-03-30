@@ -64,13 +64,13 @@ but not all, causing either "too many values to unpack" (if implementation retur
 - Modify: `auth_service/infrastructure/security/jwt_token_service.py`
 - Modify: `tests/unit/application/fakes.py`
 
-- [ ] Confirm `TokenService.generate_access_token` signature is `-> tuple[str, str]` with
+- [x] Confirm `TokenService.generate_access_token` signature is `-> tuple[str, str]` with
   docstring "returns (token, jti)"
-- [ ] Confirm `JwtTokenService.generate_access_token` returns exactly `(token, jti)` — a 2-tuple
+- [x] Confirm `JwtTokenService.generate_access_token` returns exactly `(token, jti)` — a 2-tuple
   where `token` is the JWT string and `jti` is the UUID4 string embedded in claims
-- [ ] Confirm `FakeTokenService.generate_access_token` returns `(f"access:{user_id}:{session_id}:{jti}", jti)`
+- [x] Confirm `FakeTokenService.generate_access_token` returns `(f"access:{user_id}:{session_id}:{jti}", jti)`
   — a 2-tuple matching the same contract
-- [ ] Run `pytest tests/unit/infrastructure/test_security.py -v` — all 11 tests pass, 0 failures
+- [x] Run `pytest tests/unit/infrastructure/test_security.py -v` — all 11 tests pass, 0 failures
 
 ### Task 2: Fix command handlers to unpack the tuple correctly
 
