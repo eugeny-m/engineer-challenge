@@ -187,18 +187,18 @@ These features are independent and should be implemented as two separate PRs in 
 **Files:**
 - Create: `presentation/graphql/idempotency.py`
 
-- [ ] create `IdempotencyExtension(SchemaExtension)` in `presentation/graphql/idempotency.py`
-- [ ] `IDEMPOTENT_OPERATIONS = {"login", "requestPasswordReset"}`
-- [ ] implement `on_executing()`: extract operation name; skip if not in `IDEMPOTENT_OPERATIONS`
-- [ ] if no `Idempotency-Key` header present: yield (execute normally)
-- [ ] compute `request_hash = sha256(operation + json.dumps(request_body, sort_keys=True))`
-- [ ] on cache hit with matching hash: inject cached response, skip execution
-- [ ] on cache hit with mismatching hash: return GraphQL error `{"code": "IDEMPOTENCY_CONFLICT"}` (do NOT use HTTP 409 — GraphQL convention is always 200 with errors array)
-- [ ] on cache miss: yield (execute normally), then store result in `IdempotencyStore` with 24h TTL
-- [ ] write unit test: cache hit with matching hash → cached response returned, handler not called
-- [ ] write unit test: cache miss → handler called, response stored
-- [ ] write unit test: cache hit with different hash → `IDEMPOTENCY_CONFLICT` error returned
-- [ ] run tests — must pass before Task 10
+- [x] create `IdempotencyExtension(SchemaExtension)` in `presentation/graphql/idempotency.py`
+- [x] `IDEMPOTENT_OPERATIONS = {"login", "requestPasswordReset"}`
+- [x] implement `on_execute()`: extract operation name; skip if not in `IDEMPOTENT_OPERATIONS`
+- [x] if no `Idempotency-Key` header present: yield (execute normally)
+- [x] compute `request_hash = sha256(operation + json.dumps(request_body, sort_keys=True))`
+- [x] on cache hit with matching hash: inject cached response, skip execution
+- [x] on cache hit with mismatching hash: return GraphQL error `{"code": "IDEMPOTENCY_CONFLICT"}` (do NOT use HTTP 409 — GraphQL convention is always 200 with errors array)
+- [x] on cache miss: yield (execute normally), then store result in `IdempotencyStore` with 24h TTL
+- [x] write unit test: cache hit with matching hash → cached response returned, handler not called
+- [x] write unit test: cache miss → handler called, response stored
+- [x] write unit test: cache hit with different hash → `IDEMPOTENCY_CONFLICT` error returned
+- [x] run tests — must pass before Task 10
 
 ---
 
