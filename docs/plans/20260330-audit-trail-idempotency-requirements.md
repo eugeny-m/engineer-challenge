@@ -118,11 +118,11 @@ These features are independent and should be implemented as two separate PRs in 
 - Modify: `application/dto.py`
 - Modify: `presentation/graphql/mutations.py`
 
-- [ ] add `ip_address: str | None = None` field to: `AuthenticateUserCommand`, `RefreshTokenCommand`, `RevokeSessionCommand`, `RequestPasswordResetCommand`, `ResetPasswordCommand`
-- [ ] in each corresponding mutation resolver in `mutations.py`, extract IP: `request = info.context["request"]; ip_address = request.client.host if request.client else None`
-- [ ] pass `ip_address=ip_address` to each command constructor
-- [ ] write unit tests for each mutation resolver: assert `ip_address` is extracted and forwarded correctly (mock request context)
-- [ ] run tests — must pass before Task 6
+- [x] add `ip_address: str | None = None` field to: `AuthenticateUserCommand`, `RefreshTokenCommand`, `RevokeSessionCommand`, `RequestPasswordResetCommand`, `ResetPasswordCommand`
+- [x] in each corresponding mutation resolver in `mutations.py`, extract IP: `request = info.context["request"]; ip_address = request.client.host if request.client else None`
+- [x] pass `ip_address=ip_address` to each command constructor
+- [x] write unit tests for each mutation resolver: assert `ip_address` is extracted and forwarded correctly (mock request context)
+- [x] run tests — must pass before Task 6
 
 ---
 

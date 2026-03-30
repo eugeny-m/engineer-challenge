@@ -60,7 +60,9 @@ class AuthMutation:
 
     @strawberry.mutation
     async def login(self, info: Info, input: LoginInput) -> AuthPayload:
+        request = info.context["request"]
         container = info.context["container"]
+        ip_address = request.client.host if request.client else None
         handler: AuthenticateUserHandler = container.authenticate_user_handler
         try:
             result = await handler.handle(
@@ -68,6 +70,7 @@ class AuthMutation:
                     email=input.email,
                     password=input.password,
                     device_info=input.device_info,
+                    ip_address=ip_address,
                 )
             )
             return AuthPayload(
@@ -81,10 +84,14 @@ class AuthMutation:
 
     @strawberry.mutation
     async def refresh_token(self, info: Info, input: RefreshTokenInput) -> AuthPayload:
+        request = info.context["request"]
         container = info.context["container"]
+        ip_address = request.client.host if request.client else None
         handler: RefreshTokenHandler = container.refresh_token_handler
         try:
-            result = await handler.handle(RefreshTokenCommand(refresh_token=input.refresh_token))
+            result = await handler.handle(
+                RefreshTokenCommand(refresh_token=input.refresh_token, ip_address=ip_address)
+            )
             return AuthPayload(
                 access_token=result.access_token,
                 refresh_token=result.refresh_token,
@@ -123,9 +130,10 @@ class AuthMutation:
         if session_data.get("user_id") != caller_user_id_str:
             return OperationResult(success=False, message="Not authorised to revoke this session")
 
+        ip_address = request.client.host if request.client else None
         handler: RevokeSessionHandler = container.revoke_session_handler
         try:
-            await handler.handle(RevokeSessionCommand(session_id=session_id))
+            await handler.handle(RevokeSessionCommand(session_id=session_id, ip_address=ip_address))
             return OperationResult(success=True, message="Session revoked")
         except Exception:
             return OperationResult(success=False, message="Internal error")
@@ -134,10 +142,12 @@ class AuthMutation:
     async def request_password_reset(
         self, info: Info, input: RequestResetInput
     ) -> OperationResult:
+        request = info.context["request"]
         container = info.context["container"]
+        ip_address = request.client.host if request.client else None
         handler: RequestPasswordResetHandler = container.request_password_reset_handler
         try:
-            await handler.handle(RequestPasswordResetCommand(email=input.email))
+            await handler.handle(RequestPasswordResetCommand(email=input.email, ip_address=ip_address))
             return OperationResult(
                 success=True,
                 message="If this email is registered, a reset link has been sent",
@@ -147,11 +157,17 @@ class AuthMutation:
 
     @strawberry.mutation
     async def reset_password(self, info: Info, input: ResetPasswordInput) -> OperationResult:
+        request = info.context["request"]
         container = info.context["container"]
+        ip_address = request.client.host if request.client else None
         handler: ResetPasswordHandler = container.reset_password_handler
         try:
             await handler.handle(
-                ResetPasswordCommand(token=input.token, new_password=input.new_password)
+                ResetPasswordCommand(
+                    token=input.token,
+                    new_password=input.new_password,
+                    ip_address=ip_address,
+                )
             )
             return OperationResult(success=True, message="Password reset successfully")
         except (TokenExpiredError, TokenAlreadyUsedError, TokenNotFoundError):

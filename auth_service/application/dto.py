@@ -16,27 +16,32 @@ class AuthenticateUserCommand:
     email: str
     password: str
     device_info: str | None = None
+    ip_address: str | None = None
 
 
 @dataclass(frozen=True)
 class RefreshTokenCommand:
     refresh_token: str
+    ip_address: str | None = None
 
 
 @dataclass(frozen=True)
 class RevokeSessionCommand:
     session_id: UUID
+    ip_address: str | None = None
 
 
 @dataclass(frozen=True)
 class RequestPasswordResetCommand:
     email: str
+    ip_address: str | None = None
 
 
 @dataclass(frozen=True)
 class ResetPasswordCommand:
     token: str
     new_password: str
+    ip_address: str | None = None
 
 
 @dataclass(frozen=True)
