@@ -53,6 +53,17 @@ class IdempotencyExtension(SchemaExtension):
     # Lifecycle hook
     # ------------------------------------------------------------------
 
+    def _resolve_store(self) -> "IdempotencyStore | None":
+        """Return the store injected via ``with_store()`` or from the request context."""
+        store = getattr(self, "_store", None)
+        if store is not None:
+            return store
+        context = self.execution_context.context or {}
+        scope = context.get("container")
+        if scope is not None:
+            return getattr(scope, "idempotency_store", None)
+        return None
+
     async def on_execute(self) -> AsyncIterator[None]:  # type: ignore[override]
         operation_name = self._get_mutation_field_name()
         if operation_name not in IDEMPOTENT_OPERATIONS:
@@ -68,13 +79,18 @@ class IdempotencyExtension(SchemaExtension):
             yield
             return
 
+        store = self._resolve_store()
+        if store is None:
+            yield
+            return
+
         variables = self.execution_context.variables or {}
         request_hash = hashlib.sha256(
             (operation_name + json.dumps(variables, sort_keys=True)).encode()
         ).hexdigest()
 
-        redis_key = self._store.make_key(operation_name, idempotency_key)
-        cached = await self._store.get(redis_key)
+        redis_key = store.make_key(operation_name, idempotency_key)
+        cached = await store.get(redis_key)
 
         if cached is not None:
             if cached.get("request_hash") == request_hash:
@@ -103,7 +119,7 @@ class IdempotencyExtension(SchemaExtension):
         # After execution: persist the result for future retries.
         result = self.execution_context.result
         if result is not None and not result.errors and result.data is not None:
-            await self._store.set(
+            await store.set(
                 redis_key,
                 {"request_hash": request_hash, "response": result.data},
             )

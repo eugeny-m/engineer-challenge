@@ -33,6 +33,7 @@ from auth_service.infrastructure.db.repositories.reset_token_repository import (
 )
 from auth_service.infrastructure.db.repositories.user_repository import SqlUserRepository
 from auth_service.infrastructure.email.mock_email_service import MockEmailService
+from auth_service.infrastructure.redis.idempotency_store import IdempotencyStore
 from auth_service.infrastructure.redis.redis_token_store import RedisTokenStore
 from auth_service.infrastructure.security.bcrypt_hasher import BcryptHasher
 from auth_service.infrastructure.security.jwt_token_service import JwtTokenService
@@ -55,6 +56,7 @@ class RequestScope:
         self.user_repo = SqlUserRepository(session)
         self._reset_token_repo = SqlResetTokenRepository(session)
         self.audit_log: AuditLogPort = AuditLogRepository(session)
+        self.idempotency_store: IdempotencyStore = global_container.idempotency_store
 
         # Command handlers
         self.register_user_handler = RegisterUserHandler(
@@ -129,6 +131,7 @@ class GlobalContainer:
         # TODO: add SmtpEmailService and select based on EMAIL_BACKEND env var.
         self.email_service = MockEmailService()
         self.rate_limiter = RateLimiter(redis_client)
+        self.idempotency_store = IdempotencyStore(redis_client)
 
     @asynccontextmanager
     async def request_scope(self) -> AsyncGenerator[RequestScope, None]:

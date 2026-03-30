@@ -207,13 +207,13 @@ These features are independent and should be implemented as two separate PRs in 
 **Files:**
 - Modify: `presentation/graphql/schema.py`
 
-- [ ] import `IdempotencyExtension` in `schema.py`
-- [ ] add `IdempotencyExtension` to the `extensions` list when constructing the Strawberry schema
-- [ ] wire `IdempotencyStore` into the extension (via DI or direct instantiation with Redis client from container)
-- [ ] write integration test: two identical `login` calls with same `Idempotency-Key` header → only one session created in Redis, second call returns same tokens
-- [ ] write integration test: two `login` calls with same `Idempotency-Key` but different body → `IDEMPOTENCY_CONFLICT` error returned
-- [ ] write integration test: two identical `requestPasswordReset` calls with same key → only one email dispatched (mock email sender), second call returns same response
-- [ ] run tests — must pass before Task 11
+- [x] import `IdempotencyExtension` in `schema.py`
+- [x] add `IdempotencyExtension` to the `extensions` list when constructing the Strawberry schema
+- [x] wire `IdempotencyStore` into the extension (via DI or direct instantiation with Redis client from container)
+- [x] write integration test: two identical `login` calls with same `Idempotency-Key` header → only one session created in Redis, second call returns same tokens
+- [x] write integration test: two `login` calls with same `Idempotency-Key` but different body → `IDEMPOTENCY_CONFLICT` error returned
+- [x] write integration test: two identical `requestPasswordReset` calls with same key → only one email dispatched (mock email sender), second call returns same response
+- [x] run tests — must pass before Task 11
 
 ---
 

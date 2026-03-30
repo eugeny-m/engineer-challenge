@@ -496,3 +496,175 @@ class TestPasswordReset:
         )
         data = second.json()["data"]["resetPassword"]
         assert data["success"] is False
+
+
+# ---------------------------------------------------------------------------
+# Idempotency
+# ---------------------------------------------------------------------------
+
+
+@skip_no_services
+class TestIdempotency:
+    """Integration tests for IdempotencyExtension — login and requestPasswordReset."""
+
+    async def _register(self, client, email: str, password: str = "SecurePass1") -> None:
+        await client.post(
+            "/graphql",
+            json=gql(REGISTER_MUTATION, {"email": email, "password": password}),
+        )
+
+    async def test_login_same_key_returns_same_tokens(self, test_client):
+        """Two login calls with the same Idempotency-Key must return identical tokens."""
+        client, _ = test_client
+        email = f"idem-login-{uuid.uuid4().hex[:8]}@example.com"
+        await self._register(client, email)
+
+        headers = {"Idempotency-Key": f"login-key-{uuid.uuid4().hex}"}
+        payload = gql(LOGIN_MUTATION, {"email": email, "password": "SecurePass1"})
+
+        resp1 = await client.post("/graphql", json=payload, headers=headers)
+        resp2 = await client.post("/graphql", json=payload, headers=headers)
+
+        data1 = resp1.json()["data"]["login"]
+        data2 = resp2.json()["data"]["login"]
+
+        assert data1["accessToken"] == data2["accessToken"]
+        assert data1["refreshToken"] == data2["refreshToken"]
+        assert data1["sessionId"] == data2["sessionId"]
+
+    async def test_login_same_key_creates_only_one_session(self, test_client):
+        """Repeated login with same key should not create extra Redis sessions."""
+        client, container = test_client
+        email = f"idem-session-{uuid.uuid4().hex[:8]}@example.com"
+        await self._register(client, email)
+
+        headers = {"Idempotency-Key": f"login-key-{uuid.uuid4().hex}"}
+        payload = gql(LOGIN_MUTATION, {"email": email, "password": "SecurePass1"})
+
+        resp1 = await client.post("/graphql", json=payload, headers=headers)
+        session_id_1 = resp1.json()["data"]["login"]["sessionId"]
+
+        resp2 = await client.post("/graphql", json=payload, headers=headers)
+        session_id_2 = resp2.json()["data"]["login"]["sessionId"]
+
+        # Both calls return the same session — only one was created
+        assert session_id_1 == session_id_2
+
+    async def test_login_same_key_different_body_conflict(self, test_client):
+        """Same Idempotency-Key but different request body must return IDEMPOTENCY_CONFLICT."""
+        client, _ = test_client
+        email1 = f"idem-conf1-{uuid.uuid4().hex[:8]}@example.com"
+        email2 = f"idem-conf2-{uuid.uuid4().hex[:8]}@example.com"
+        await self._register(client, email1)
+        await self._register(client, email2)
+
+        idempotency_key = f"conflict-key-{uuid.uuid4().hex}"
+        headers = {"Idempotency-Key": idempotency_key}
+
+        # First call — email1
+        await client.post(
+            "/graphql",
+            json=gql(LOGIN_MUTATION, {"email": email1, "password": "SecurePass1"}),
+            headers=headers,
+        )
+
+        # Second call — different email (different body) with same key
+        resp2 = await client.post(
+            "/graphql",
+            json=gql(LOGIN_MUTATION, {"email": email2, "password": "SecurePass1"}),
+            headers=headers,
+        )
+        body2 = resp2.json()
+        assert "errors" in body2
+        error_codes = [
+            e.get("extensions", {}).get("code") for e in body2["errors"]
+        ]
+        assert "IDEMPOTENCY_CONFLICT" in error_codes
+
+    async def test_login_without_key_executes_normally(self, test_client):
+        """Absence of Idempotency-Key header must not break normal execution."""
+        client, _ = test_client
+        email = f"idem-nokey-{uuid.uuid4().hex[:8]}@example.com"
+        await self._register(client, email)
+
+        resp = await client.post(
+            "/graphql",
+            json=gql(LOGIN_MUTATION, {"email": email, "password": "SecurePass1"}),
+        )
+        assert resp.json()["data"]["login"]["accessToken"]
+
+    async def test_request_password_reset_same_key_returns_same_response(self, test_client):
+        """Repeated requestPasswordReset with same key returns the same response."""
+        client, container = test_client
+        email = f"idem-reset-{uuid.uuid4().hex[:8]}@example.com"
+        await self._register(client, email)
+
+        headers = {"Idempotency-Key": f"reset-key-{uuid.uuid4().hex}"}
+        payload = gql(REQUEST_RESET_MUTATION, {"email": email})
+
+        resp1 = await client.post("/graphql", json=payload, headers=headers)
+        email_count_after_first = len(container.email_service.sent_emails)
+
+        resp2 = await client.post("/graphql", json=payload, headers=headers)
+        email_count_after_second = len(container.email_service.sent_emails)
+
+        # Only one email dispatched — second call served from cache
+        assert email_count_after_first == email_count_after_second
+
+        data1 = resp1.json()["data"]["requestPasswordReset"]
+        data2 = resp2.json()["data"]["requestPasswordReset"]
+        assert data1["success"] == data2["success"]
+
+    async def test_request_password_reset_same_key_different_body_conflict(self, test_client):
+        """Same Idempotency-Key with different email must return IDEMPOTENCY_CONFLICT."""
+        client, _ = test_client
+        email1 = f"idem-rr1-{uuid.uuid4().hex[:8]}@example.com"
+        email2 = f"idem-rr2-{uuid.uuid4().hex[:8]}@example.com"
+        await self._register(client, email1)
+        await self._register(client, email2)
+
+        idempotency_key = f"reset-conflict-{uuid.uuid4().hex}"
+        headers = {"Idempotency-Key": idempotency_key}
+
+        # First call with email1
+        await client.post(
+            "/graphql",
+            json=gql(REQUEST_RESET_MUTATION, {"email": email1}),
+            headers=headers,
+        )
+
+        # Second call with email2 (different body)
+        resp2 = await client.post(
+            "/graphql",
+            json=gql(REQUEST_RESET_MUTATION, {"email": email2}),
+            headers=headers,
+        )
+        body2 = resp2.json()
+        assert "errors" in body2
+        error_codes = [
+            e.get("extensions", {}).get("code") for e in body2["errors"]
+        ]
+        assert "IDEMPOTENCY_CONFLICT" in error_codes
+
+    async def test_non_idempotent_mutation_ignores_key(self, test_client):
+        """Idempotency-Key header on register (non-idempotent op) must be ignored."""
+        client, _ = test_client
+        email1 = f"idem-reg1-{uuid.uuid4().hex[:8]}@example.com"
+        email2 = f"idem-reg2-{uuid.uuid4().hex[:8]}@example.com"
+
+        headers = {"Idempotency-Key": f"reg-key-{uuid.uuid4().hex}"}
+
+        resp1 = await client.post(
+            "/graphql",
+            json=gql(REGISTER_MUTATION, {"email": email1, "password": "SecurePass1"}),
+            headers=headers,
+        )
+        resp2 = await client.post(
+            "/graphql",
+            json=gql(REGISTER_MUTATION, {"email": email2, "password": "SecurePass1"}),
+            headers=headers,
+        )
+
+        # Both should succeed independently — no idempotency applied
+        assert resp1.json()["data"]["register"]["success"] is True
+        assert resp2.json()["data"]["register"]["success"] is True

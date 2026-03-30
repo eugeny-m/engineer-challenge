@@ -280,7 +280,7 @@ class TestAuditLogRepository:
         assert row.user_id == user.id
         assert row.event_type == "logout"
         assert row.session_id == dto.session_id
-        assert row.ip_address == "172.16.0.5"
+        assert str(row.ip_address) == "172.16.0.5"
         assert row.metadata_ == {"reason": "user_logout"}
 
     async def test_record_nullable_fields(self, session):

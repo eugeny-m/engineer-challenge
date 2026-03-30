@@ -2,11 +2,16 @@
 import strawberry
 from strawberry.fastapi import GraphQLRouter
 
+from auth_service.presentation.graphql.idempotency import IdempotencyExtension
 from auth_service.presentation.graphql.mutations import AuthMutation
 from auth_service.presentation.graphql.queries import AuthQuery
 
 
-schema = strawberry.Schema(query=AuthQuery, mutation=AuthMutation)
+schema = strawberry.Schema(
+    query=AuthQuery,
+    mutation=AuthMutation,
+    extensions=[IdempotencyExtension],
+)
 
 
 def create_graphql_router(get_context) -> GraphQLRouter:
