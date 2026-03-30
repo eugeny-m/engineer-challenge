@@ -231,8 +231,8 @@ These features are independent and should be implemented as two separate PRs in 
 
 ### Task 12: [Final] Update documentation
 
-- [ ] update `CLAUDE.md` if new patterns introduced (e.g. audit log fire-and-forget pattern, idempotency extension pattern)
-- [ ] move this plan to `docs/plans/completed/`
+- [x] update `CLAUDE.md` if new patterns introduced (e.g. audit log fire-and-forget pattern, idempotency extension pattern)
+- [x] move this plan to `docs/plans/completed/`
 
 ---
 
