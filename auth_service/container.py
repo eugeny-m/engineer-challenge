@@ -24,8 +24,10 @@ from auth_service.application.commands.register_user import RegisterUserHandler
 from auth_service.application.commands.request_password_reset import RequestPasswordResetHandler
 from auth_service.application.commands.reset_password import ResetPasswordHandler
 from auth_service.application.commands.revoke_session import RevokeSessionHandler
+from auth_service.application.ports.audit_log import AuditLogPort
 from auth_service.application.ports.token_service import TokenService
 from auth_service.application.ports.token_store import TokenStore
+from auth_service.infrastructure.db.repositories.audit_log_repository import AuditLogRepository
 from auth_service.infrastructure.db.repositories.reset_token_repository import (
     SqlResetTokenRepository,
 )
@@ -52,6 +54,7 @@ class RequestScope:
         # Per-request repositories (bound to the session)
         self.user_repo = SqlUserRepository(session)
         self._reset_token_repo = SqlResetTokenRepository(session)
+        self.audit_log: AuditLogPort = AuditLogRepository(session)
 
         # Command handlers
         self.register_user_handler = RegisterUserHandler(

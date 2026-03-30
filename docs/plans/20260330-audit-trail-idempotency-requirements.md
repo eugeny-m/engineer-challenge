@@ -105,10 +105,10 @@ These features are independent and should be implemented as two separate PRs in 
 **Files:**
 - Modify: `container.py`
 
-- [ ] import `AuditLogRepository` in `container.py`
-- [ ] bind `AuditLogPort` → `AuditLogRepository` in `GlobalContainer` (request-scoped, using DB session)
-- [ ] write unit test: resolve `AuditLogPort` from container, assert instance is `AuditLogRepository`
-- [ ] run tests — must pass before Task 5
+- [x] import `AuditLogRepository` in `container.py`
+- [x] bind `AuditLogPort` → `AuditLogRepository` in `GlobalContainer` (request-scoped, using DB session)
+- [x] write unit test: resolve `AuditLogPort` from container, assert instance is `AuditLogRepository`
+- [x] run tests — must pass before Task 5
 
 ---
 
