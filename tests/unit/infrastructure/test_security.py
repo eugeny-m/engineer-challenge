@@ -10,7 +10,7 @@ from auth_service.infrastructure.security.bcrypt_hasher import BcryptHasher
 from auth_service.infrastructure.security.jwt_token_service import JwtTokenService
 from auth_service.domain.exceptions import TokenExpiredError, InvalidTokenError
 
-_SECRET = "test-secret-key-for-unit-tests"
+_SECRET = "test-secret-key-for-unit-tests!!"
 
 
 # ---------------------------------------------------------------------------
@@ -112,7 +112,7 @@ class TestJwtTokenService:
             self.service.decode_access_token("not.a.jwt")
 
     def test_token_signed_with_wrong_secret_raises_invalid_token_error(self):
-        other_service = JwtTokenService(secret="wrong-secret", access_token_expire_minutes=15)
+        other_service = JwtTokenService(secret="wrong-secret-key-for-unit-tests!!", access_token_expire_minutes=15)
         token, _ = other_service.generate_access_token(self.user_id, self.session_id)
         with pytest.raises(InvalidTokenError):
             self.service.decode_access_token(token)

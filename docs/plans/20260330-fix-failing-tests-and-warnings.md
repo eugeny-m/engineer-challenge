@@ -120,12 +120,12 @@ HS256: `_SECRET` (30 bytes) and the inline `"wrong-secret"` (12 bytes).
 **Files:**
 - Modify: `tests/unit/infrastructure/test_security.py`
 
-- [ ] Extend `_SECRET = "test-secret-key-for-unit-tests"` to ≥ 32 bytes,
+- [x] Extend `_SECRET = "test-secret-key-for-unit-tests"` to ≥ 32 bytes,
   e.g. `"test-secret-key-for-unit-tests!!"` (32 bytes)
-- [ ] Extend the inline `secret="wrong-secret"` in
+- [x] Extend the inline `secret="wrong-secret"` in
   `test_token_signed_with_wrong_secret_raises_invalid_token_error` to ≥ 32 bytes,
   e.g. `"wrong-secret-key-for-unit-tests!!"` (34 bytes)
-- [ ] Run `pytest tests/unit/infrastructure/test_security.py -v -W error::DeprecationWarning`
+- [x] Run `pytest tests/unit/infrastructure/test_security.py -v -W error::DeprecationWarning`
   and confirm 0 `InsecureKeyLengthWarning` lines in output
 
 ### Task 5: Verify acceptance criteria
