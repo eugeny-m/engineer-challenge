@@ -64,8 +64,10 @@ class RedisTokenStore(TokenStore):
                 },
             )
             pipe.expire(self._session_key(session_id), refresh_ttl)
-            # user sessions set
+            # user sessions set — keep TTL at least as long as the longest-lived session
+            # so the set does not accumulate indefinitely for long-lived users.
             pipe.sadd(self._user_sessions_key(user_id), str(session_id))
+            pipe.expire(self._user_sessions_key(user_id), refresh_ttl)
             await pipe.execute()
 
     async def get_session(self, session_id: UUID) -> dict | None:
@@ -136,6 +138,8 @@ class RedisTokenStore(TokenStore):
                 },
             )
             pipe.expire(self._session_key(session_id), refresh_ttl)
+            # Refresh the user-sessions set TTL so it outlives long-running sessions.
+            pipe.expire(self._user_sessions_key(UUID(user_id)), refresh_ttl)
             await pipe.execute()
 
     async def revoke_session(self, session_id: UUID) -> None:

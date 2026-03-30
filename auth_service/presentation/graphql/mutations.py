@@ -138,7 +138,10 @@ class AuthMutation:
         handler: RequestPasswordResetHandler = container.request_password_reset_handler
         try:
             await handler.handle(RequestPasswordResetCommand(email=input.email))
-            return OperationResult(success=True, message="Password reset email sent")
+            return OperationResult(
+                success=True,
+                message="If this email is registered, a reset link has been sent",
+            )
         except InvalidEmailError as exc:
             return OperationResult(success=False, message=str(exc))
 
@@ -151,9 +154,9 @@ class AuthMutation:
                 ResetPasswordCommand(token=input.token, new_password=input.new_password)
             )
             return OperationResult(success=True, message="Password reset successfully")
-        except TokenExpiredError as exc:
-            return OperationResult(success=False, message=str(exc))
-        except TokenAlreadyUsedError as exc:
-            return OperationResult(success=False, message=str(exc))
-        except (TokenNotFoundError, UserNotFoundError, WeakPasswordError, InvalidTokenError) as exc:
+        except (TokenExpiredError, TokenAlreadyUsedError, TokenNotFoundError):
+            # Use a single generic message for all token-validity failures to avoid
+            # leaking whether a token exists, is expired, or has already been used.
+            return OperationResult(success=False, message="Invalid or expired reset token")
+        except (UserNotFoundError, WeakPasswordError, InvalidTokenError) as exc:
             return OperationResult(success=False, message=str(exc))

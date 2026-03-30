@@ -42,7 +42,7 @@ class AuthQuery:
             return None
 
         user = await container.user_repo.find_by_id(UUID(user_id_str))
-        if user is None:
+        if user is None or not user.is_active:
             return None
 
         return UserInfo(

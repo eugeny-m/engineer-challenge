@@ -44,8 +44,10 @@ _RATE_LIMITS: dict[str, list[tuple[str, int, int]]] = {
     ],
 }
 
-# Regex to extract the first mutation field name from a GraphQL query string.
+# Regex to extract the first field from an anonymous/unnamed mutation.
 _MUTATION_OP_RE = re.compile(r"mutation\b[^{]*\{[^{]*?(\w+)\s*[\({]", re.DOTALL)
+# Regex template to extract the first field from a named mutation (operationName substituted in).
+_NAMED_MUTATION_OP_RE_TEMPLATE = r"mutation\s+{name}\b[^{{]*\{{[^{{]*?(\w+)\s*[\({{]"
 
 # Fields that carry an email in their variables (variables.input.email)
 _EMAIL_OPS = frozenset({"login", "register", "requestPasswordReset"})
@@ -84,11 +86,12 @@ class GraphQLRateLimitMiddleware(BaseHTTPMiddleware):
         if operation not in _RATE_LIMITS:
             return await call_next(request)
 
-        # Prefer X-Real-IP set by trusted reverse proxies; fall back to X-Forwarded-For
-        # (first entry is the originating client), then the transport-level address.
+        # Use X-Real-IP only if set by a trusted reverse proxy (e.g. nginx sets it from
+        # $remote_addr, not from user-supplied headers).  X-Forwarded-For is NOT used
+        # because it is trivially spoofable by any client, which would allow unlimited
+        # login attempts from a single source IP by cycling fake header values.
         ip = (
             request.headers.get("x-real-ip")
-            or (request.headers.get("x-forwarded-for", "").split(",")[0].strip() or None)
             or (request.client.host if request.client else None)
             or "unknown"
         )
@@ -111,14 +114,33 @@ class GraphQLRateLimitMiddleware(BaseHTTPMiddleware):
 
     @staticmethod
     def _extract_operation(body: dict) -> str:
-        """Return the first mutation field name from a GraphQL request body."""
+        """Return the mutation field name for the operation that will actually execute.
+
+        When the client sets ``operationName``, GraphQL executes only that named
+        operation — so we must extract the first field of *that* operation rather
+        than blindly matching the first mutation in the document.  Without this
+        check a client could bypass rate limits by hiding the real operation as the
+        second mutation in a multi-operation document.
+        """
         query: str = body.get("query", "")
+        op_name = body.get("operationName") or ""
+
+        if op_name and isinstance(op_name, str):
+            # Find the named mutation and extract its first selection field.
+            named_re = re.compile(
+                _NAMED_MUTATION_OP_RE_TEMPLATE.format(name=re.escape(op_name)),
+                re.DOTALL,
+            )
+            match = named_re.search(query)
+            if match:
+                return match.group(1)
+            # operationName present but no matching named mutation found — unknown op.
+            return ""
+
+        # No operationName: fall back to the first mutation in the document.
         match = _MUTATION_OP_RE.search(query)
         if match:
             return match.group(1)
-        # Do NOT fall back to body["operationName"]: it is user-supplied and could
-        # be any string that does not correspond to the actual mutation field name,
-        # allowing callers to bypass per-operation rate limits.
         return ""
 
     @staticmethod
