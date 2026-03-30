@@ -83,13 +83,13 @@ causing `AttributeError: 'tuple' object has no attribute 'split'` in the fake's 
 - Modify: `auth_service/application/commands/authenticate_user.py`
 - Modify: `auth_service/application/commands/refresh_token.py`
 
-- [ ] In `AuthenticateUserHandler.handle`: ensure `generate_access_token` result is unpacked as
+- [x] In `AuthenticateUserHandler.handle`: ensure `generate_access_token` result is unpacked as
   `access_token, jti = self._token_service.generate_access_token(user.id, session_id)` and
   `access_token` (not the tuple) is passed to `TokenPairDTO` and `create_session`
-- [ ] In `RefreshTokenHandler.handle`: ensure `generate_access_token` result is unpacked as
+- [x] In `RefreshTokenHandler.handle`: ensure `generate_access_token` result is unpacked as
   `new_access_token, new_jti = self._token_service.generate_access_token(user_id, session_id)`
   and individual values are used, not the tuple
-- [ ] Run `pytest tests/unit/application/ -v` — all 12 tests pass, 0 failures
+- [x] Run `pytest tests/unit/application/ -v` — all 24 tests pass, 0 failures
 
 ### Task 3: Fix `rotate_session` to explicitly delete the old refresh token
 
