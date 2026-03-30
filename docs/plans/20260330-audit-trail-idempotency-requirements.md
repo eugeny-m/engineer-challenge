@@ -172,13 +172,13 @@ These features are independent and should be implemented as two separate PRs in 
 **Files:**
 - Create: `infrastructure/redis/idempotency_store.py`
 
-- [ ] implement `IdempotencyStore` class with Redis client injected via constructor
-- [ ] `async def get(self, key: str) -> dict | None` — fetch and JSON-decode from Redis, return `None` on miss
-- [ ] `async def set(self, key: str, value: dict, ttl: int) -> None` — JSON-encode and store with TTL (24h = 86400s)
-- [ ] key format: `idempotency:{operation}:{idempotency_key_value}`
-- [ ] stored value format: `{"request_hash": "<sha256>", "response": {...}}`
-- [ ] write unit tests: get miss → None, get hit → dict, set stores correct JSON and TTL (mock Redis)
-- [ ] run tests — must pass before Task 9
+- [x] implement `IdempotencyStore` class with Redis client injected via constructor
+- [x] `async def get(self, key: str) -> dict | None` — fetch and JSON-decode from Redis, return `None` on miss
+- [x] `async def set(self, key: str, value: dict, ttl: int) -> None` — JSON-encode and store with TTL (24h = 86400s)
+- [x] key format: `idempotency:{operation}:{idempotency_key_value}`
+- [x] stored value format: `{"request_hash": "<sha256>", "response": {...}}`
+- [x] write unit tests: get miss → None, get hit → dict, set stores correct JSON and TTL (mock Redis)
+- [x] run tests — must pass before Task 9
 
 ---
 
