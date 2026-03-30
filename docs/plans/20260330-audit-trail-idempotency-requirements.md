@@ -77,13 +77,13 @@ These features are independent and should be implemented as two separate PRs in 
 - Modify: `infrastructure/db/models.py`
 - Create: `alembic/versions/<hash>_add_auth_events_table.py`
 
-- [ ] add `AuthEventModel` to `infrastructure/db/models.py` with columns: `id UUID PK`, `user_id UUID FK→users(id) ON DELETE SET NULL nullable`, `event_type VARCHAR(50) NOT NULL`, `session_id UUID nullable`, `ip_address INET nullable`, `occurred_at TIMESTAMPTZ NOT NULL`, `metadata JSONB NOT NULL DEFAULT '{}'`
-- [ ] add indexes: `idx_auth_events_user_id`, `idx_auth_events_occurred_at`, `idx_auth_events_event_type`
-- [ ] generate Alembic migration: `docker compose -f docker/docker-compose.yml run --rm app alembic revision --autogenerate -m "add_auth_events_table"`
-- [ ] verify generated migration SQL matches the data model spec; adjust if autogenerate missed INET type or JSONB default
-- [ ] apply migration: `docker compose -f docker/docker-compose.yml run --rm app alembic upgrade head`
-- [ ] write integration test: save an `AuthEventModel` to `auth_test` DB, query it back, assert all fields round-trip correctly
-- [ ] run tests — must pass before Task 3
+- [x] add `AuthEventModel` to `infrastructure/db/models.py` with columns: `id UUID PK`, `user_id UUID FK→users(id) ON DELETE SET NULL nullable`, `event_type VARCHAR(50) NOT NULL`, `session_id UUID nullable`, `ip_address INET nullable`, `occurred_at TIMESTAMPTZ NOT NULL`, `metadata JSONB NOT NULL DEFAULT '{}'`
+- [x] add indexes: `idx_auth_events_user_id`, `idx_auth_events_occurred_at`, `idx_auth_events_event_type`
+- [x] generate Alembic migration: `docker compose -f docker/docker-compose.yml run --rm app alembic revision --autogenerate -m "add_auth_events_table"`
+- [x] verify generated migration SQL matches the data model spec; adjust if autogenerate missed INET type or JSONB default
+- [x] apply migration: `docker compose -f docker/docker-compose.yml run --rm app alembic upgrade head`
+- [x] write integration test: save an `AuthEventModel` to `auth_test` DB, query it back, assert all fields round-trip correctly
+- [x] run tests — must pass before Task 3
 
 ---
 
