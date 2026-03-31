@@ -45,7 +45,7 @@ the correct factory anyway.
 
 ### Task 3: Update documentation
 
-- [ ] move this plan to `docs/plans/completed/`
+- [x] move this plan to `docs/plans/completed/`
 
 ## Technical Details
 
