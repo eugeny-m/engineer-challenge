@@ -32,10 +32,10 @@ the correct factory anyway.
 - Modify: `auth_service/infrastructure/logging.py`
 - Create: `tests/unit/infrastructure/test_logging.py`
 
-- [ ] replace `logger_factory=structlog.PrintLoggerFactory()` with `logger_factory=structlog.stdlib.LoggerFactory()`
-- [ ] write unit test: call `configure_logging()` then `get_logger(__name__).info("test")` — must not raise
-- [ ] write unit test: verify `add_logger_name` populates `logger` field (console and json modes)
-- [ ] run `pytest tests/unit/infrastructure/test_logging.py -v` — must pass
+- [x] replace `logger_factory=structlog.PrintLoggerFactory()` with `logger_factory=structlog.stdlib.LoggerFactory()`
+- [x] write unit test: call `configure_logging()` then `get_logger(__name__).info("test")` — must not raise
+- [x] write unit test: verify `add_logger_name` populates `logger` field (console and json modes)
+- [x] run `pytest tests/unit/infrastructure/test_logging.py -v` — must pass
 
 ### Task 2: Verify acceptance criteria
 
