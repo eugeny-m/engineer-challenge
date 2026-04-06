@@ -55,6 +55,7 @@ URLs with Docker service names (`postgres`, `redis`). `.env` is for local dev (l
 - Structured logging via structlog; JSON in production (`LOG_FORMAT=json`), console in dev (`LOG_FORMAT=console`)
 - Audit log fire-and-forget: all `AuditLogPort.record()` calls are wrapped in `try/except Exception` — audit failures MUST never propagate to the caller; audit events are recorded in `auth_events` PostgreSQL table via `AuditLogRepository`
 - Idempotency extension: `IdempotencyExtension` (Strawberry `SchemaExtension`) intercepts `login` and `requestPasswordReset`; reads `Idempotency-Key` header, stores SHA-256(operation+body) → response in Redis with 24h TTL; same key + different body returns GraphQL error `IDEMPOTENCY_CONFLICT` (HTTP 200, errors array); absent header passes through normally
+- `requestPasswordReset` raises `UserNotFoundError` for unknown emails, returning `success=False` — email enumeration protection intentionally removed by product decision
 
 ## Build / migration commands
 
