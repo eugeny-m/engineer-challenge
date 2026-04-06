@@ -277,8 +277,4 @@ Architecture Decision Records are in `docs/adr/`:
 - [ADR-0002: Layered DDD over hexagonal architecture](docs/adr/0002-layered-ddd.md)
 - [ADR-0003: Python stack choice](docs/adr/0003-python-stack.md)
 
----
 
-## AI usage
-
-See `.agents/` for documentation of how AI tools were used in building this solution.

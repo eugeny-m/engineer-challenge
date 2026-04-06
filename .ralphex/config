@@ -83,7 +83,7 @@ external_review_tool = none
 # finalize_enabled: whether to run finalize step after successful review phases
 # runs once at the end, best-effort (failures logged but don't block success)
 # default: false
-# finalize_enabled = false
+finalize_enabled = true
 
 # ------------------------------------------------------------------------------
 # worktree isolation
