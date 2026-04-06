@@ -51,7 +51,7 @@ URLs with Docker service names (`postgres`, `redis`). `.env` is for local dev (l
 - Access tokens: short-lived JWTs with `jti`; revoked JTIs stored in Redis
 - Refresh tokens: opaque UUIDs stored in Redis under `refresh:{token}` key
 - Sessions keyed as `session:{session_id}` hash in Redis; tracked per-user in `sessions:{user_id}` set
-- Rate limiting via SlowAPI with Redis backend; email-keyed limits on `login` and `requestPasswordReset`
+- Rate limiting via custom RateLimiter with Redis backend; implemented as ASGI middleware (GraphQLRateLimitMiddleware); email-keyed limits on `login` and `requestPasswordReset`
 - Structured logging via structlog; JSON in production (`LOG_FORMAT=json`), console in dev (`LOG_FORMAT=console`)
 - Audit log fire-and-forget: all `AuditLogPort.record()` calls are wrapped in `try/except Exception` — audit failures MUST never propagate to the caller; audit events are recorded in `auth_events` PostgreSQL table via `AuditLogRepository`
 - Idempotency extension: `IdempotencyExtension` (Strawberry `SchemaExtension`) intercepts `login` and `requestPasswordReset`; reads `Idempotency-Key` header, stores SHA-256(operation+body) → response in Redis with 24h TTL; same key + different body returns GraphQL error `IDEMPOTENCY_CONFLICT` (HTTP 200, errors array); absent header passes through normally
