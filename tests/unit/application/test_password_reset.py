@@ -86,16 +86,14 @@ async def test_request_password_reset_success():
 
 @pytest.mark.asyncio
 async def test_request_password_reset_unknown_email():
-    # Unknown email should complete silently (no exception) to prevent email enumeration.
+    # Unknown email should raise UserNotFoundError (email enumeration protection removed).
     repo = FakeUserRepository()
     token_repo = FakeResetTokenRepository()
     email_svc = FakeEmailService()
 
     handler = RequestPasswordResetHandler(repo, token_repo, email_svc, FakeAuditLogPort())
-    await handler.handle(RequestPasswordResetCommand(email="nobody@example.com"))
-
-    assert len(email_svc.sent_emails) == 0
-    assert len(token_repo.tokens) == 0
+    with pytest.raises(UserNotFoundError):
+        await handler.handle(RequestPasswordResetCommand(email="nobody@example.com"))
 
 
 @pytest.mark.asyncio

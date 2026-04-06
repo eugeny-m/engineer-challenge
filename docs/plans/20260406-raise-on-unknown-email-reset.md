@@ -39,10 +39,10 @@ Currently the handler returns `None` silently and the GraphQL mutation responds 
 **Files:**
 - Modify: `tests/unit/application/test_password_reset.py`
 
-- [ ] Change `test_request_password_reset_unknown_email` to assert `pytest.raises(UserNotFoundError)` instead of silent return
-- [ ] Update the inline comment/docstring in the test to reflect the new expected behavior (was "should complete silently")
-- [ ] Import `UserNotFoundError` in the test file if not already imported
-- [ ] Run unit tests — test MUST fail (red): `pytest tests/unit/application/test_password_reset.py -v`
+- [x] Change `test_request_password_reset_unknown_email` to assert `pytest.raises(UserNotFoundError)` instead of silent return
+- [x] Update the inline comment/docstring in the test to reflect the new expected behavior (was "should complete silently")
+- [x] Import `UserNotFoundError` in the test file if not already imported
+- [x] Run unit tests — test MUST fail (red): `pytest tests/unit/application/test_password_reset.py -v`
 
 ### Task 2: Update integration test for unknown-email case (TDD — red)
 
