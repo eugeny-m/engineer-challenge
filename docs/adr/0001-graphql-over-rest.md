@@ -56,7 +56,7 @@ Use **GraphQL via Strawberry** (code-first, Python).
 - GraphQL introspection and the built-in Playground at `/graphql` make the service
   immediately explorable for reviewers without a Postman collection.
 - Single endpoint simplifies rate limiting configuration: all mutations flow through
-  `/graphql`, and SlowAPI can inspect GraphQL operation names to apply per-operation limits.
+  `/graphql`, and the custom ASGI middleware inspects GraphQL operation names to apply per-operation limits.
 
 ## Consequences
 

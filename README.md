@@ -27,7 +27,7 @@ design. Three user flows: Registration, Login, and Password Recovery.
 | Session store | Redis 7 |
 | Migrations | Alembic |
 | Auth | bcrypt (cost 12) + PyJWT + opaque refresh tokens |
-| Rate limiting | SlowAPI (Redis backend) |
+| Rate limiting | Custom RateLimiter (Redis backend) |
 | Logging | structlog (JSON in production, console in dev) |
 | Testing | pytest + pytest-asyncio + httpx |
 
