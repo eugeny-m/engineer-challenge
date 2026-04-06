@@ -5,6 +5,17 @@ design. Three user flows: Registration, Login, and Password Recovery.
 
 ---
 
+## Make commands
+
+| Command | Description |
+|---|---|
+| `make run_l` | Start all services (app, postgres, redis) in background |
+| `make stop_l` | Stop all services |
+| `make test` | Run full test suite inside Docker Compose network |
+| `make test_unit` | Run unit tests locally (no services required) |
+
+---
+
 ## Stack
 
 | Layer | Technology |
