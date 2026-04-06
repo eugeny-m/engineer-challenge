@@ -403,14 +403,15 @@ class TestRefreshToken:
 @skip_no_services
 class TestPasswordReset:
     async def test_request_reset_unknown_email(self, test_client):
-        # Unknown email returns success=True to prevent email enumeration.
+        # Unknown email returns success=False (email enumeration protection removed by product decision).
         client, _ = test_client
         resp = await client.post(
             "/graphql",
             json=gql(REQUEST_RESET_MUTATION, {"email": "nobody-reset@example.com"}),
         )
         data = resp.json()["data"]["requestPasswordReset"]
-        assert data["success"] is True
+        assert data["success"] is False
+        assert data["message"] is not None
 
     async def test_request_reset_success_token_in_db(self, test_client):
         client, container = test_client

@@ -49,8 +49,8 @@ Currently the handler returns `None` silently and the GraphQL mutation responds 
 **Files:**
 - Modify: `tests/integration/test_graphql.py`
 
-- [ ] Change `test_request_reset_unknown_email` to assert `success=False` and check `message` matches the error
-- [ ] Run inside Docker to confirm the test now fails (red): `docker compose -f docker/docker-compose.yml run --rm app pytest tests/integration/test_graphql.py::TestPasswordReset::test_request_reset_unknown_email -v`
+- [x] Change `test_request_reset_unknown_email` to assert `success=False` and check `message` matches the error
+- [x] Run inside Docker to confirm the test now fails (red): `docker compose -f docker/docker-compose.yml run --rm app pytest tests/integration/test_graphql.py::TestPasswordReset::test_request_reset_unknown_email -v` (skipped - docker compose unavailable in this environment)
 
 ### Task 3: Raise UserNotFoundError in handler (TDD — green)
 
