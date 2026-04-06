@@ -57,11 +57,11 @@ Currently the handler returns `None` silently and the GraphQL mutation responds 
 **Files:**
 - Modify: `auth_service/application/commands/request_password_reset.py`
 
-- [ ] Move the `user is None` check **before** the outer `try/except Exception` block (or raise outside it) so `UserNotFoundError` is not logged as a generic `request_password_reset.failure`
-- [ ] Replace the silent `return` with `raise UserNotFoundError(f"No user with email {command.email}")`
-- [ ] Import `UserNotFoundError` from `auth_service.domain.exceptions` if not already present
-- [ ] Run unit tests — `test_request_password_reset_unknown_email` must now pass (green): `pytest tests/unit/application/test_password_reset.py -v`
-- [ ] Run full unit suite and confirm no regressions: `pytest tests/unit/ -v`
+- [x] Move the `user is None` check **before** the outer `try/except Exception` block (or raise outside it) so `UserNotFoundError` is not logged as a generic `request_password_reset.failure`
+- [x] Replace the silent `return` with `raise UserNotFoundError(f"No user with email {command.email}")`
+- [x] Import `UserNotFoundError` from `auth_service.domain.exceptions` if not already present
+- [x] Run unit tests — `test_request_password_reset_unknown_email` must now pass (green): `pytest tests/unit/application/test_password_reset.py -v`
+- [x] Run full unit suite and confirm no regressions: `pytest tests/unit/ -v`
 
 ### Task 4: Catch UserNotFoundError in GraphQL mutation (TDD — green)
 

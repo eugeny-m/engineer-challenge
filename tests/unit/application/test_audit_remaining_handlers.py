@@ -16,6 +16,7 @@ from auth_service.application.dto import (
 )
 from auth_service.domain.entities.password_reset_token import PasswordResetToken
 from auth_service.domain.entities.user import User
+from auth_service.domain.exceptions import UserNotFoundError
 from auth_service.domain.value_objects.auth_event_type import AuthEventType
 from auth_service.domain.value_objects.email import Email
 from auth_service.domain.value_objects.hashed_password import HashedPassword
@@ -192,8 +193,9 @@ async def test_request_password_reset_no_audit_for_unknown_email():
     email_svc = FakeEmailService()
     audit = FakeAuditLogPort()
     handler = RequestPasswordResetHandler(repo, token_repo, email_svc, audit)
-    # Unknown email — should complete silently, no audit event
-    await handler.handle(RequestPasswordResetCommand(email="nobody@example.com"))
+    # Unknown email — should raise UserNotFoundError, no audit event
+    with pytest.raises(UserNotFoundError):
+        await handler.handle(RequestPasswordResetCommand(email="nobody@example.com"))
     assert len(audit.recorded) == 0
 
 

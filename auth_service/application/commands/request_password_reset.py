@@ -8,6 +8,7 @@ from auth_service.application.dto import AuditEventDTO, RequestPasswordResetComm
 from auth_service.application.ports.audit_log import AuditLogPort
 from auth_service.application.ports.email_service import EmailService
 from auth_service.domain.entities.password_reset_token import PasswordResetToken
+from auth_service.domain.exceptions import UserNotFoundError
 from auth_service.domain.repositories.reset_token_repository import ResetTokenRepository
 from auth_service.domain.repositories.user_repository import UserRepository
 from auth_service.domain.value_objects.auth_event_type import AuthEventType
@@ -40,18 +41,13 @@ class RequestPasswordResetHandler:
         log = _log.bind(operation="request_password_reset")
         log.info("request_password_reset.start")
 
+        email = Email(command.email)
+        user = await self._user_repo.find_by_email(email)
+
+        if user is None:
+            raise UserNotFoundError(f"No user with email {command.email}")
+
         try:
-            email = Email(command.email)
-            user = await self._user_repo.find_by_email(email)
-
-            # Silently return when the email is not registered to prevent email enumeration.
-            # Callers receive a success response regardless, so they cannot distinguish
-            # between a registered and unregistered address.
-            if user is None:
-                duration_ms = round((time.monotonic() - start) * 1000, 2)
-                log.info("request_password_reset.no_account", duration_ms=duration_ms)
-                return
-
             # Invalidate all previous reset tokens for this user (one active token invariant)
             await self._reset_token_repo.delete_all_by_user_id(user.id)
 
