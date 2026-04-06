@@ -154,6 +154,8 @@ class AuthMutation:
             )
         except InvalidEmailError as exc:
             return OperationResult(success=False, message=str(exc))
+        except UserNotFoundError as exc:
+            return OperationResult(success=False, message=str(exc))
 
     @strawberry.mutation
     async def reset_password(self, info: Info, input: ResetPasswordInput) -> OperationResult:

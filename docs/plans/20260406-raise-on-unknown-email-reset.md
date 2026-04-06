@@ -68,10 +68,10 @@ Currently the handler returns `None` silently and the GraphQL mutation responds 
 **Files:**
 - Modify: `auth_service/presentation/graphql/mutations.py`
 
-- [ ] Add `except UserNotFoundError as exc` block in `request_password_reset` mutation (`UserNotFoundError` is already imported)
-- [ ] Return `OperationResult(success=False, message=str(exc))` — consistent with `InvalidEmailError` and `reset_password` patterns
-- [ ] Confirm `InvalidEmailError` still returns `success=False` (existing behavior unchanged)
-- [ ] Run unit tests: `pytest tests/unit/ -v` — all must pass
+- [x] Add `except UserNotFoundError as exc` block in `request_password_reset` mutation (`UserNotFoundError` is already imported)
+- [x] Return `OperationResult(success=False, message=str(exc))` — consistent with `InvalidEmailError` and `reset_password` patterns
+- [x] Confirm `InvalidEmailError` still returns `success=False` (existing behavior unchanged)
+- [x] Run unit tests: `pytest tests/unit/ -v` — all must pass
 
 ### Task 5: Verify acceptance criteria
 
