@@ -1,114 +1,314 @@
-# Advanced Engineer Challenge
+# Auth Module — PintoPay Engineering Challenge
 
-Не забудьте сперва поставить Star. Спасибо!
+Production-quality authentication service demonstrating DDD, CQRS, IaC, and security-first
+design. Three user flows: Registration, Login, and Password Recovery.
 
-UPD: Вакансия немного переехала. Смотрите ссылку.
+---
 
-Этот репозиторий — инженерный челлендж для кандидатов на backend/fullstack позиции.
+## Make commands
 
-Задача специально узкая по продукту, но широкая по архитектуре: мы оцениваем не «как быстро собрать формы логина», а то, как вы проектируете систему.
+| Command | Description |
+|---|---|
+| `make run_l` | Start all services (app, postgres, redis) in background |
+| `make stop_l` | Stop all services |
+| `make test` | Run full test suite inside Docker Compose network |
+| `make test_unit` | Run unit tests locally (no services required) |
 
-## Контекст
+---
 
-Вам нужно реализовать модуль аутентификации для 3 пользовательских сценариев:
-1. Регистрация
-2. Авторизация
-3. Восстановление пароля
+## Stack
 
-UI-дизайн (https://www.figma.com/design/31KetUbya482vMSGgyiNIf/Orbitto-%7C-Service--Copy-?node-id=102-12806&t=TMlkJ3c3j3vJF5fb-4) уже подготовлен и будет отправной точкой для клиентской части.
+| Layer | Technology |
+|---|---|
+| Language | Python 3.12 |
+| API | FastAPI + Strawberry GraphQL |
+| ORM | SQLAlchemy 2.0 async |
+| Database | PostgreSQL 16 |
+| Session store | Redis 7 |
+| Migrations | Alembic |
+| Auth | bcrypt (cost 12) + PyJWT + opaque refresh tokens |
+| Rate limiting | Custom RateLimiter (Redis backend) |
+| Logging | structlog (JSON in production, console in dev) |
+| Testing | pytest + pytest-asyncio + httpx |
 
-## Что важно
+---
 
-Решение должно демонстрировать инженерную зрелость:
-- DDD (явные bounded context, модель домена, язык предметной области)
-- CQRS (разделение команд и запросов)
-- IaC (воспроизводимое окружение инфраструктуры)
-- Осознанный выбор языка и стека (язык выбираете на своё усмотрение, но выбор нужно аргументировать)
+## How to run
 
-`CRUD + controller + stock REST auth по документации` не считается целевым уровнем решения для этого челленджа.
+### Prerequisites
 
-## Обязательные требования
+- Docker and Docker Compose plugin
+- (Optional) Python 3.12 + pip for local development without Docker
 
-1. Архитектура
-- Покажите доменную модель и границы контекстов.
-- Выделите command side и query side (даже если в упрощенном виде).
-- Опишите ключевые инварианты и бизнес-правила (например, правила reset-token, валидация пароля, ограничения на повторную отправку).
+### Start everything
 
-2. API/протокол взаимодействия
-- Предпочтительный уровень: `gRPC` и/или `GraphQL`.
-- `Только REST` допустим исключительно при сильной архитектурной аргументации, иначе это будет существенным минусом.
+```bash
+cp .env.example .env            # review and adjust secrets
+docker compose -f docker/docker-compose.yml up --build
+```
 
-3. Infrastructure as Code
-- Запуск окружения должен быть описан кодом.
-- Минимум: локально воспроизводимый стенд (например, Docker Compose).
-- Плюс в оценке: Terraform/Kubernetes manifests/Helm.
+The app starts at http://localhost:8000/graphql (GraphQL Playground).
 
-4. Безопасность
-- Без хранения паролей в открытом виде.
-- Корректная работа с токенами/сессиями.
-- Защита базовых auth-флоу (rate limiting, expiration, replay/abuse considerations).
+On startup the container automatically runs `alembic upgrade head` before launching uvicorn,
+so the database schema is always up to date.
 
-5. Наблюдаемость и качество
-- Логи, метрики или трейсинг (минимум один из блоков).
-- Тесты критичных участков (доменные правила, auth-флоу, интеграционные точки).
+### Quick start — register a user
 
-6. Технологические решения
-- Язык программирования и фреймворки выбираете самостоятельно.
-- В `README` обязательно зафиксируйте, почему выбрали именно этот стек и какие альтернативы рассматривали.
+```bash
+curl -X POST http://localhost:8000/graphql \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "mutation Register($input: RegisterInput!) { register(input: $input) { success message } }",
+    "variables": { "input": { "email": "user@example.com", "password": "SecurePass123!" } }
+  }'
+```
 
-## Ограничения и анти-паттерны
+See `manual_curl_examples.sh` for login, idempotency key usage, and other operations.
 
-Следующие подходы считаются слабым решением:
-- Полностью «коробочный» auth-провайдер без вашей архитектурной проработки домена.
-- Копирование шаблонного туториала без обоснования trade-offs.
-- Монолитный слой handlers/controllers без разделения доменной и инфраструктурной логики.
+### Environment variables
 
-Можно использовать библиотеки для криптографии, JWT, транспорта и т.д., но архитектурные решения должны быть вашими.
+| Variable | Default | Description |
+|---|---|---|
+| DB_URL | (required) | asyncpg connection string |
+| REDIS_URL | (required) | Redis connection string |
+| JWT_SECRET | (required) | HS256 signing key |
+| ACCESS_TOKEN_EXPIRE_MINUTES | 15 | Access JWT lifetime |
+| REFRESH_TOKEN_EXPIRE_DAYS | 30 | Refresh token lifetime |
+| RESET_TOKEN_EXPIRE_MINUTES | 15 | Password-reset token lifetime |
+| LOG_FORMAT | json | Log format: `json` for production, `console` for human-readable dev output |
+| DB_TEST_URL | (postgres service default) | asyncpg URL for the `auth_test` database; used by integration tests |
+| REDIS_TEST_URL | (redis service default) | Redis URL for GraphQL integration tests (DB index 2) |
+| REDIS_TOKEN_TEST_URL | (redis service default) | Redis URL for token store integration tests (DB index 1) |
 
-## Что нужно сдать
+### Run tests
 
-1. Исходный код в вашем fork.
-2. Обновленный `README` в вашем fork с:
-- как запустить проект;
-- архитектурная схема (можно Mermaid/PlantUML);
-- объяснение, где в решении DDD, CQRS и IaC;
-- ключевые компромиссы (trade-offs);
-- что сделали бы следующим шагом в production-версии.
-3. Минимальный набор тестов и инструкции по их запуску.
+```bash
+# Unit tests only (no services required — run locally)
+pytest tests/unit/ -v
 
-## Формат выполнения
+# Full suite including integration tests (requires Docker Compose network)
+docker compose -f docker/docker-compose.yml run --rm app pytest tests/ -v
+```
 
-1. Сделайте fork этого репозитория.
-2. Пройдите Pinterest-челлендж:
-- соберите `moodboard`;
-- соберите `anti-moodboard`.
-3. Реализуйте решение в своем fork.
-4. Оформите результат в `README`.
-5. Отправьте 3 ссылки в отклике:
-- ссылка на `moodboard`;
-- ссылка на `anti-moodboard`;
-- ссылка на ваш fork.
+Integration tests connect to `postgres` and `redis` by Docker service name and must run
+inside the Compose network. Running `pytest tests/integration/` outside Docker will fail
+with a connection error.
 
-## Использование ИИ
+---
 
-- Использование ИИ-инструментов в рамках челленджа разрешено.
-- Если используете ИИ, добавьте в ваш fork папку `.agents`, чтобы было видно, каким образом вы строили процесс решения.
+## Architecture diagram
 
-## Критерии оценки
+```mermaid
+flowchart TD
+    Client -->|HTTP GraphQL| GQL[Strawberry GraphQL\npresentation layer]
 
-1. Архитектурное мышление (DDD/CQRS/IaC).
-2. Качество инженерных решений и аргументация trade-offs.
-3. Надежность и безопасность auth-флоу.
-4. Чистота кода и тестовое покрытие критичных сценариев.
-5. Операбельность: насколько легко поднять и проверить решение.
+    subgraph Application layer
+        GQL --> MUT[AuthMutation resolvers]
+        GQL --> QRY[AuthQuery resolver]
+        MUT --> CMD[Command Handlers\nRegister / Login / Refresh\nRevoke / RequestReset / ResetPwd]
+        QRY --> JWT_CHECK[JWT decode + Redis jti check]
+    end
 
-## Бонусные сигналы
+    subgraph Domain layer
+        CMD --> USR[User aggregate]
+        CMD --> PRT[PasswordResetToken entity]
+        USR --> VO[Value Objects\nEmail · HashedPassword\nPlainPassword · ResetToken]
+        CMD --> REPO_IF[Repository interfaces\nUserRepository\nResetTokenRepository]
+    end
 
-- Event-driven взаимодействие между компонентами.
-- Service mesh / policy-driven networking (если уместно и обосновано).
-- Продуманная стратегия эволюции схемы данных и backward compatibility.
-- ADR (Architecture Decision Records) для ключевых решений.
+    subgraph Infrastructure layer
+        REPO_IF --> SQL_REPO[SqlUserRepository\nSqlResetTokenRepository\nSQLAlchemy async]
+        CMD --> PORT[Application port interfaces\nPasswordHasher · TokenService\nTokenStore · EmailService]
+        PORT --> BCRYPT[BcryptHasher]
+        PORT --> JWT_SVC[JwtTokenService]
+        PORT --> REDIS_STORE[RedisTokenStore]
+        PORT --> EMAIL[MockEmailService]
+        SQL_REPO --> PG[(PostgreSQL)]
+        REDIS_STORE --> RDS[(Redis)]
+        JWT_SVC --> RDS
+    end
 
-## Важно
+    subgraph IaC
+        DC[docker-compose.yml] --> PG
+        DC --> RDS
+        DC --> APP[app container]
+        ALB[Alembic migrations] --> PG
+    end
+```
 
-Нас интересует не «идеальный продакшен за вечер», а качество инженерного мышления и способность строить систему осознанно.
+### Request flow — Login
+
+```
+Client  →  POST /graphql  →  AuthMutation.login
+           ↓
+           AuthenticateUserHandler
+           ↓
+           SqlUserRepository.find_by_email        [Postgres read]
+           ↓
+           BcryptHasher.verify                    [CPU]
+           ↓
+           JwtTokenService.generate_access_token  [UUID jti + HS256]
+           JwtTokenService.generate_refresh_token [secrets.token_urlsafe]
+           ↓
+           RedisTokenStore.create_session          [pipeline: 4 Redis ops]
+           ↓
+           AuthPayload { accessToken, refreshToken, tokenType }
+```
+
+---
+
+## Where DDD, CQRS, and IaC appear
+
+### Domain-Driven Design
+
+The bounded context is **Identity**. Domain knowledge lives exclusively in `auth_service/domain/`:
+
+- **Value objects** (`domain/value_objects/`) enforce invariants at construction time.
+  `Email` normalises and validates format. `PlainPassword` enforces minimum length and digit
+  requirement. Neither ORM nor framework types leak into the domain.
+- **Entities and aggregate root** (`domain/entities/`). `User` is the aggregate root.
+  `PasswordResetToken.consume()` enforces two independent invariants: TTL expiry check first,
+  then single-use check — the ordering is an explicit domain rule, not a database constraint.
+- **Repository interfaces** (`domain/repositories/`) are pure Python ABCs. The domain layer
+  has zero knowledge of SQLAlchemy, Redis, or any infrastructure detail.
+- **Domain exceptions** (`domain/exceptions.py`) express ubiquitous language:
+  `TokenExpiredError`, `UserAlreadyExistsError`, `InvalidCredentialsError`, etc.
+
+### CQRS
+
+The application layer (`auth_service/application/`) is split by side:
+
+- **Command side** (`application/commands/`): one handler per mutating operation.
+  Each handler receives a command DTO, calls domain objects and repository interfaces,
+  and returns void or a DTO. No SQLAlchemy sessions, no HTTP concerns.
+- **Query side**: the `me` GraphQL query is handled directly in the resolver — it decodes
+  the JWT, checks the jti allowlist in Redis, and returns user info. No command handler
+  needed for a stateless read with no domain rules.
+- Strawberry mutations map cleanly to commands; the single query maps to a read.
+
+### Infrastructure as Code
+
+- `docker/docker-compose.yml` defines the full local environment: `app`, `postgres` (with
+  healthcheck and persistent volume), `redis` (Redis 7 with healthcheck and persistent volume).
+- `docker/postgres/init.sql` creates both `auth` (production) and `auth_test` databases.
+- `docker/Dockerfile` is multi-stage, uses Python 3.12-slim, runs as a non-root user.
+- `alembic/` contains the migration history. Migrations run automatically on container start.
+- `.env.example` documents every required environment variable.
+
+### Domain invariants and business rules
+
+| Rule | Where enforced |
+|---|---|
+| Email must be valid format, normalised to lowercase | `Email` value object constructor |
+| Password minimum 8 characters, at least one digit | `PlainPassword` value object constructor |
+| One active reset token per user | `RequestPasswordResetHandler` deletes previous tokens before issuing a new one |
+| Reset token expires in 15 minutes | `PasswordResetToken.consume()` — TTL check first |
+| Reset token is single-use | `PasswordResetToken.consume()` — used flag check second |
+| TTL expiry is checked before used flag | Explicit ordering in `consume()` — expired token must report expiry, not "already used" |
+| Refresh token is single-use | `GETDEL` in `RedisTokenStore` — atomic read and delete |
+| Access token can be revoked instantly | JTI allowlist in Redis — absence of JTI means revoked |
+| Audit log failure never propagates | All `AuditLogPort.record()` calls wrapped in `try/except Exception` |
+
+### Observability
+
+Structured logging via **structlog**. In production (`LOG_FORMAT=json`) every log line is a
+JSON object with consistent fields: `timestamp`, `level`, `logger`, `event`, and
+operation-specific context (e.g. `user_id`, `session_id`, `duration_ms`). In development
+(`LOG_FORMAT=console`) output is human-readable with colour.
+
+Every command handler emits start/success/failure events with `duration_ms`. Rate limit
+violations are logged at `warning` level with `key`, `count`, `limit`, and `retry_after`.
+The `auth_events` PostgreSQL table provides a durable audit trail for all auth events
+(login success/failure, logout, token refresh, password reset).
+
+---
+
+## Key trade-offs
+
+### Redis token allowlist vs pure stateless JWT
+
+Pure stateless JWT cannot satisfy the fintech requirement of immediate token revocation
+(compromised account, fraud detection, forced logout). A Redis allowlist adds ~0.2 ms per
+authenticated request but enables sub-millisecond revocation at scale. A blocklist was
+rejected because it grows unboundedly; an allowlist is bounded by active session count.
+
+### Email enumeration in password reset
+
+`RequestPasswordResetHandler` raises `UserNotFoundError` when the email is not registered.
+The security-correct approach (return an identical success response regardless) prevents email
+enumeration — an attacker cannot probe which addresses are registered. This was consciously
+rejected in favour of explicit UX feedback. If the threat model changes, the fix is a
+one-line change in the handler: replace the raise with `return`.
+
+### No hard account lockout
+
+Hard lockout (block account after N failed attempts) enables a DoS vector: an attacker can
+lock out any legitimate user by deliberately triggering the limit. The custom rate limiter
+(Redis fixed-window counters) applies per-IP and per-email limits, providing exponential
+backoff protection without creating a lockout DoS surface. This is documented in the rate
+limiter source.
+
+### Python over Go/TypeScript
+
+Primary reason: production Python experience enables meaningful architectural review and
+validation of decisions; other stacks would produce code that cannot be critically evaluated.
+Secondary: Strawberry provides code-first GraphQL that maps cleanly to DDD types, async
+SQLAlchemy 2.0 is mature, FastAPI has excellent async support. Trade-off acknowledged: lower
+raw throughput than Go, but auth service bottlenecks are Redis/Postgres I/O, not CPU.
+
+### Layered DDD over hexagonal architecture
+
+Classic hexagonal (ports and adapters) with explicit primary/secondary port separation adds
+ceremony that is not justified at this scope. The current structure (domain → application
+ports → infrastructure adapters) achieves the same dependency inversion with less indirection.
+See ADR-0002 for the full analysis.
+
+---
+
+## Next steps for production
+
+1. **Observability**: add Prometheus metrics (request latency, error rates, Redis hit ratio),
+   OpenTelemetry tracing (trace IDs in structlog context), and Grafana dashboards.
+
+2. **Kubernetes / Helm**: replace Docker Compose with a Helm chart. Secrets via Kubernetes
+   Secrets or Vault. Horizontal Pod Autoscaler on the app deployment.
+
+3. **Real email delivery**: swap `MockEmailService` for SendGrid/SES with retry logic and
+   delivery tracking. Consider a transactional email queue (SQS/RabbitMQ) so reset emails
+   are decoupled from the request path.
+
+4. **mTLS between services**: use a service mesh (Linkerd or Istio) for mutual TLS between
+   app, Postgres, and Redis. Policy-driven networking to block lateral movement.
+
+5. **Key rotation**: support multiple JWT signing keys (JWKS endpoint) so secrets can be
+   rotated without forcing all users to re-login. Implement a key ID (`kid`) claim.
+
+6. **Multi-factor authentication**: TOTP (RFC 6238) as a second factor. The domain model
+   already supports extension — add a `TotpCredential` entity to the `User` aggregate.
+
+7. **Schema evolution strategy**: add a migration CI step that runs `alembic check` against
+   the target database and rejects backward-incompatible column removals without a deprecation
+   window. Shadow migrations for zero-downtime schema changes.
+
+8. **Session metadata in PostgreSQL**: currently all session data lives in Redis only.
+   For user-facing active sessions list, device ID tracking, or geo/IP history, session
+   metadata should be persisted in PostgreSQL with Redis used only as the fast token store.
+
+---
+
+## Architecture rationale
+
+For a narrative explanation of why these technology and architecture choices were made,
+see [README_HUMAN.md](README_HUMAN.md).
+
+---
+
+## ADRs
+
+Architecture Decision Records are in `docs/adr/`:
+
+- [ADR-0001: GraphQL over gRPC/REST](docs/adr/0001-graphql-over-rest.md)
+- [ADR-0002: Layered DDD over hexagonal architecture](docs/adr/0002-layered-ddd.md)
+- [ADR-0003: Python stack choice](docs/adr/0003-python-stack.md)
+
+

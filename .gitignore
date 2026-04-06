@@ -1,1 +1,16 @@
 .idea
+
+# ralphex progress logs
+.ralphex/progress/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pip-packages/
+.env
+.venv
+
+# IDE
+.vscode/
