@@ -52,6 +52,19 @@ The app starts at http://localhost:8000/graphql (GraphQL Playground).
 On startup the container automatically runs `alembic upgrade head` before launching uvicorn,
 so the database schema is always up to date.
 
+### Quick start — register a user
+
+```bash
+curl -X POST http://localhost:8000/graphql \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "mutation Register($input: RegisterInput!) { register(input: $input) { success message } }",
+    "variables": { "input": { "email": "user@example.com", "password": "SecurePass123!" } }
+  }'
+```
+
+See `manual_curl_examples.sh` for login, idempotency key usage, and other operations.
+
 ### Environment variables
 
 | Variable | Default | Description |
