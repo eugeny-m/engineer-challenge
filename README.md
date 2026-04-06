@@ -195,6 +195,32 @@ The application layer (`auth_service/application/`) is split by side:
 - `alembic/` contains the migration history. Migrations run automatically on container start.
 - `.env.example` documents every required environment variable.
 
+### Domain invariants and business rules
+
+| Rule | Where enforced |
+|---|---|
+| Email must be valid format, normalised to lowercase | `Email` value object constructor |
+| Password minimum 8 characters, at least one digit | `PlainPassword` value object constructor |
+| One active reset token per user | `RequestPasswordResetHandler` deletes previous tokens before issuing a new one |
+| Reset token expires in 15 minutes | `PasswordResetToken.consume()` — TTL check first |
+| Reset token is single-use | `PasswordResetToken.consume()` — used flag check second |
+| TTL expiry is checked before used flag | Explicit ordering in `consume()` — expired token must report expiry, not "already used" |
+| Refresh token is single-use | `GETDEL` in `RedisTokenStore` — atomic read and delete |
+| Access token can be revoked instantly | JTI allowlist in Redis — absence of JTI means revoked |
+| Audit log failure never propagates | All `AuditLogPort.record()` calls wrapped in `try/except Exception` |
+
+### Observability
+
+Structured logging via **structlog**. In production (`LOG_FORMAT=json`) every log line is a
+JSON object with consistent fields: `timestamp`, `level`, `logger`, `event`, and
+operation-specific context (e.g. `user_id`, `session_id`, `duration_ms`). In development
+(`LOG_FORMAT=console`) output is human-readable with colour.
+
+Every command handler emits start/success/failure events with `duration_ms`. Rate limit
+violations are logged at `warning` level with `key`, `count`, `limit`, and `retry_after`.
+The `auth_events` PostgreSQL table provides a durable audit trail for all auth events
+(login success/failure, logout, token refresh, password reset).
+
 ---
 
 ## Key trade-offs
@@ -217,9 +243,10 @@ one-line change in the handler: replace the raise with `return`.
 ### No hard account lockout
 
 Hard lockout (block account after N failed attempts) enables a DoS vector: an attacker can
-lock out any legitimate user by deliberately triggering the limit. Rate limits (SlowAPI,
-Redis backend) apply per-IP and per-email, providing exponential backoff protection without
-creating a lockout DoS surface. This is documented in the rate limiter source.
+lock out any legitimate user by deliberately triggering the limit. The custom rate limiter
+(Redis fixed-window counters) applies per-IP and per-email limits, providing exponential
+backoff protection without creating a lockout DoS surface. This is documented in the rate
+limiter source.
 
 ### Python over Go/TypeScript
 
@@ -263,9 +290,16 @@ See ADR-0002 for the full analysis.
    the target database and rejects backward-incompatible column removals without a deprecation
    window. Shadow migrations for zero-downtime schema changes.
 
-8. **Audit log**: append-only event log (Postgres insert-only table or event stream) for
-   all auth events (login, logout, password change, failed attempts) to satisfy compliance
-   requirements.
+8. **Session metadata in PostgreSQL**: currently all session data lives in Redis only.
+   For user-facing active sessions list, device ID tracking, or geo/IP history, session
+   metadata should be persisted in PostgreSQL with Redis used only as the fast token store.
+
+---
+
+## Architecture rationale
+
+For a narrative explanation of why these technology and architecture choices were made,
+see [README_HUMAN.md](README_HUMAN.md).
 
 ---
 
